@@ -24,6 +24,12 @@ function getStatusColor(status: string | null) {
   return '#475569'
 }
 
+function getScoreColor(score: number) {
+  if (score >= 80) return '#4ade80'
+  if (score >= 70) return '#facc15'
+  return '#f87171'
+}
+
 export default async function PlayerPage({
   params,
 }: {
@@ -53,6 +59,7 @@ export default async function PlayerPage({
   }
 
   const score = data.fit_score ?? 0
+  const scoreColor = getScoreColor(score)
 
   return (
     <main
@@ -64,15 +71,15 @@ export default async function PlayerPage({
         padding: '40px 24px',
       }}
     >
-      <div style={{ maxWidth: 980, margin: '0 auto' }}>
+      <div style={{ maxWidth: 1080, margin: '0 auto' }}>
         <Link
           href="/"
           style={{
             display: 'inline-block',
-            marginBottom: 28,
+            marginBottom: 24,
             color: '#c6a96b',
             textDecoration: 'none',
-            fontWeight: 700,
+            fontWeight: 800,
           }}
         >
           ← 메인으로 돌아가기
@@ -80,10 +87,10 @@ export default async function PlayerPage({
 
         <section
           style={{
-            background: 'rgba(17, 22, 42, 0.92)',
+            background: 'rgba(17, 22, 42, 0.94)',
             border: '1px solid #26314f',
-            borderRadius: 28,
-            padding: 30,
+            borderRadius: 30,
+            padding: 32,
             marginBottom: 24,
           }}
         >
@@ -91,25 +98,26 @@ export default async function PlayerPage({
             style={{
               display: 'flex',
               justifyContent: 'space-between',
-              gap: 24,
               alignItems: 'flex-start',
+              gap: 24,
               flexWrap: 'wrap',
             }}
           >
-            <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 22, alignItems: 'center' }}>
               <div
                 style={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: 22,
+                  width: 86,
+                  height: 86,
+                  borderRadius: 26,
                   background:
                     'linear-gradient(135deg, #c6a96b 0%, #6b5a2e 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: 900,
-                  fontSize: 24,
+                  fontSize: 28,
                   color: '#0b1020',
+                  boxShadow: '0 18px 40px rgba(0,0,0,0.35)',
                 }}
               >
                 {getInitials(data.name)}
@@ -120,10 +128,10 @@ export default async function PlayerPage({
                   style={{
                     display: 'inline-block',
                     background: getStatusColor(data.status),
-                    padding: '7px 13px',
+                    padding: '7px 14px',
                     borderRadius: 999,
                     fontSize: 12,
-                    fontWeight: 800,
+                    fontWeight: 900,
                     textTransform: 'uppercase',
                     marginBottom: 12,
                   }}
@@ -131,14 +139,22 @@ export default async function PlayerPage({
                   {data.status ?? 'unknown'}
                 </span>
 
-                <h1 style={{ fontSize: 44, margin: 0 }}>{data.name}</h1>
+                <h1
+                  style={{
+                    fontSize: 48,
+                    margin: 0,
+                    letterSpacing: -1,
+                  }}
+                >
+                  {data.name}
+                </h1>
 
                 <div
                   style={{
                     display: 'flex',
                     gap: 8,
                     flexWrap: 'wrap',
-                    marginTop: 12,
+                    marginTop: 14,
                   }}
                 >
                   <Badge>{data.position ?? '-'}</Badge>
@@ -147,6 +163,64 @@ export default async function PlayerPage({
                 </div>
               </div>
             </div>
+
+            <div
+              style={{
+                minWidth: 180,
+                background: '#0b1020',
+                border: '1px solid #33415f',
+                borderRadius: 22,
+                padding: 20,
+                textAlign: 'right',
+              }}
+            >
+              <p style={{ color: '#888', marginBottom: 8 }}>전술 적합도</p>
+              <strong style={{ fontSize: 42, color: scoreColor }}>
+                {score}
+              </strong>
+              <span style={{ color: '#aaa', fontWeight: 700 }}>/100</span>
+            </div>
+          </div>
+        </section>
+
+        <section
+          style={{
+            background: 'rgba(17, 22, 42, 0.94)',
+            border: '1px solid #26314f',
+            borderRadius: 24,
+            padding: 28,
+            marginBottom: 24,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: 16,
+              marginBottom: 12,
+            }}
+          >
+            <h2 style={{ margin: 0, fontSize: 24 }}>적합도 게이지</h2>
+            <strong style={{ color: scoreColor }}>{score}/100</strong>
+          </div>
+
+          <div
+            style={{
+              height: 13,
+              borderRadius: 999,
+              background: '#0b1020',
+              overflow: 'hidden',
+              border: '1px solid #1f2942',
+            }}
+          >
+            <div
+              style={{
+                width: `${score}%`,
+                height: '100%',
+                borderRadius: 999,
+                background: scoreColor,
+              }}
+            />
           </div>
         </section>
 
@@ -161,65 +235,6 @@ export default async function PlayerPage({
           <InfoCard title="신뢰도" value={data.trust_level ?? '-'} />
           <InfoCard title="예상 이적료" value={data.fee ?? '-'} />
           <InfoCard title="출처" value={data.source ?? '-'} />
-        </section>
-
-        <section
-          style={{
-            background: 'rgba(17, 22, 42, 0.92)',
-            border: '1px solid #26314f',
-            borderRadius: 24,
-            padding: 28,
-            marginBottom: 24,
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              gap: 16,
-              alignItems: 'center',
-              marginBottom: 14,
-            }}
-          >
-            <h2 style={{ margin: 0, fontSize: 26 }}>전술 적합도</h2>
-
-            <strong
-              style={{
-                fontSize: 28,
-                color:
-                  score >= 80
-                    ? '#4ade80'
-                    : score >= 70
-                    ? '#facc15'
-                    : '#f87171',
-              }}
-            >
-              {score}/100
-            </strong>
-          </div>
-
-          <div
-            style={{
-              height: 12,
-              borderRadius: 999,
-              background: '#0b1020',
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                width: `${score}%`,
-                height: '100%',
-                borderRadius: 999,
-                background:
-                  score >= 80
-                    ? '#4ade80'
-                    : score >= 70
-                    ? '#facc15'
-                    : '#f87171',
-              }}
-            />
-          </div>
         </section>
 
         <Section title="분석">
@@ -238,12 +253,14 @@ export default async function PlayerPage({
             title="장점"
             items={data.pros ?? []}
             emptyText="장점 정보가 없습니다."
+            accent="#4ade80"
           />
 
           <ListCard
             title="단점"
             items={data.cons ?? []}
             emptyText="단점 정보가 없습니다."
+            accent="#f87171"
           />
         </div>
 
@@ -277,14 +294,14 @@ function InfoCard({ title, value }: { title: string; value: string | number }) {
   return (
     <div
       style={{
-        background: 'rgba(17, 22, 42, 0.92)',
+        background: 'rgba(17, 22, 42, 0.94)',
         borderRadius: 20,
         padding: 22,
         border: '1px solid #26314f',
       }}
     >
       <p style={{ color: '#888', marginBottom: 10 }}>{title}</p>
-      <h2 style={{ fontSize: 28, margin: 0 }}>{value}</h2>
+      <h2 style={{ fontSize: 26, margin: 0 }}>{value}</h2>
     </div>
   )
 }
@@ -299,7 +316,7 @@ function Section({
   return (
     <section
       style={{
-        background: 'rgba(17, 22, 42, 0.92)',
+        background: 'rgba(17, 22, 42, 0.94)',
         borderRadius: 24,
         padding: 28,
         border: '1px solid #26314f',
@@ -316,15 +333,17 @@ function ListCard({
   title,
   items,
   emptyText,
+  accent,
 }: {
   title: string
   items: string[]
   emptyText: string
+  accent: string
 }) {
   return (
     <section
       style={{
-        background: 'rgba(17, 22, 42, 0.92)',
+        background: 'rgba(17, 22, 42, 0.94)',
         borderRadius: 24,
         padding: 28,
         border: '1px solid #26314f',
@@ -333,9 +352,28 @@ function ListCard({
       <h2 style={{ marginBottom: 18, fontSize: 26 }}>{title}</h2>
 
       {items.length > 0 ? (
-        <ul style={{ color: '#ddd', lineHeight: 1.9, paddingLeft: 20 }}>
+        <ul style={{ color: '#ddd', lineHeight: 1.9, paddingLeft: 0, listStyle: 'none' }}>
           {items.map((item, index) => (
-            <li key={index}>{item}</li>
+            <li
+              key={index}
+              style={{
+                display: 'flex',
+                gap: 10,
+                alignItems: 'center',
+                marginBottom: 10,
+              }}
+            >
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 999,
+                  background: accent,
+                  flexShrink: 0,
+                }}
+              />
+              {item}
+            </li>
           ))}
         </ul>
       ) : (
