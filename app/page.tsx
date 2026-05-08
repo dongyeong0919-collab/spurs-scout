@@ -21,6 +21,24 @@ type Target = {
   fee: string | null
 }
 
+function getInitials(name: string) {
+  return name
+    .split(' ')
+    .map((word) => word[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+}
+
+function getStatusColor(status: string | null) {
+  if (status === 'talks') return '#f59e0b'
+  if (status === 'interest') return '#2563eb'
+  if (status === 'linked') return '#64748b'
+  if (status === 'verbal') return '#7c3aed'
+  if (status === 'official') return '#16a34a'
+  return '#475569'
+}
+
 export default function HomePage() {
   const [targets, setTargets] = useState<Target[]>([])
   const [search, setSearch] = useState('')
@@ -72,27 +90,43 @@ export default function HomePage() {
     <main
       style={{
         minHeight: '100vh',
-        background: '#0b1020',
+        background:
+          'radial-gradient(circle at top, #17213a 0%, #0b1020 45%, #050816 100%)',
         color: 'white',
         padding: '40px 24px',
       }}
     >
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <h1
-          style={{
-            fontSize: 42,
-            fontWeight: 800,
-            marginBottom: 12,
-            color: '#c6a96b',
-            letterSpacing: 2,
-          }}
-        >
-          SPURS SCOUT
-        </h1>
+        <div style={{ marginBottom: 34 }}>
+          <p
+            style={{
+              color: '#c6a96b',
+              fontSize: 13,
+              fontWeight: 800,
+              letterSpacing: 3,
+              marginBottom: 10,
+            }}
+          >
+            TRANSFER INTELLIGENCE
+          </p>
 
-        <p style={{ color: '#aaa', marginBottom: 24 }}>
-          Tottenham 팬들을 위한 비공식 이적 분석 플랫폼
-        </p>
+          <h1
+            style={{
+              fontSize: 46,
+              fontWeight: 900,
+              marginBottom: 12,
+              color: '#ffffff',
+              letterSpacing: 1,
+            }}
+          >
+            SPURS SCOUT
+          </h1>
+
+          <p style={{ color: '#a8b0c2', maxWidth: 620, lineHeight: 1.7 }}>
+            Tottenham 팬들을 위한 비공식 이적 분석 플랫폼입니다. 선수 사진과
+            구단 로고 없이 자체 분석 데이터와 안전한 UI 요소만 사용합니다.
+          </p>
+        </div>
 
         <div
           style={{
@@ -100,6 +134,10 @@ export default function HomePage() {
             gap: 12,
             flexWrap: 'wrap',
             marginBottom: 32,
+            padding: 16,
+            borderRadius: 20,
+            background: 'rgba(17, 22, 42, 0.75)',
+            border: '1px solid #26314f',
           }}
         >
           <input
@@ -109,10 +147,11 @@ export default function HomePage() {
             style={{
               padding: 12,
               borderRadius: 12,
-              border: '1px solid #26314f',
-              background: '#11162a',
+              border: '1px solid #33415f',
+              background: '#0b1020',
               color: 'white',
               minWidth: 220,
+              outline: 'none',
             }}
           />
 
@@ -122,15 +161,15 @@ export default function HomePage() {
             style={{
               padding: 12,
               borderRadius: 12,
-              border: '1px solid #26314f',
-              background: '#11162a',
+              border: '1px solid #33415f',
+              background: '#0b1020',
               color: 'white',
             }}
           >
             <option value="all">전체 상태</option>
-            <option value="talks">talks</option>
-            <option value="interest">interest</option>
             <option value="linked">linked</option>
+            <option value="interest">interest</option>
+            <option value="talks">talks</option>
             <option value="verbal">verbal</option>
             <option value="official">official</option>
           </select>
@@ -141,8 +180,8 @@ export default function HomePage() {
             style={{
               padding: 12,
               borderRadius: 12,
-              border: '1px solid #26314f',
-              background: '#11162a',
+              border: '1px solid #33415f',
+              background: '#0b1020',
               color: 'white',
             }}
           >
@@ -161,103 +200,185 @@ export default function HomePage() {
               gap: 24,
             }}
           >
-            {filteredTargets.map((player) => (
-              <Link
-                key={player.case_id}
-                href={`/player/${player.slug}`}
-                style={{
-                  textDecoration: 'none',
-                  color: 'white',
-                }}
-              >
-                <article
-  onMouseEnter={(e) => {
-    e.currentTarget.style.transform = 'translateY(-4px)'
-    e.currentTarget.style.borderColor = '#c6a96b'
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.transform = 'translateY(0px)'
-    e.currentTarget.style.borderColor = '#26314f'
-  }}
-  style={{
-    background: '#11162a',
-    border: '1px solid #26314f',
-    borderRadius: 20,
-    padding: 24,
-    minHeight: 230,
-    transition: 'all 0.2s ease',
-    cursor: 'pointer',
-    height: '100%',
-  }}
->
-                  <div
+            {filteredTargets.map((player) => {
+              const score = player.fit_score ?? 0
+
+              return (
+                <Link
+                  key={player.case_id}
+                  href={`/player/${player.slug}`}
+                  style={{
+                    textDecoration: 'none',
+                    color: 'white',
+                  }}
+                >
+                  <article
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-5px)'
+                      e.currentTarget.style.borderColor = '#c6a96b'
+                      e.currentTarget.style.boxShadow =
+                        '0 18px 40px rgba(0,0,0,0.35)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0px)'
+                      e.currentTarget.style.borderColor = '#26314f'
+                      e.currentTarget.style.boxShadow = 'none'
+                    }}
                     style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: 18,
+                      background: 'rgba(17, 22, 42, 0.92)',
+                      border: '1px solid #26314f',
+                      borderRadius: 24,
+                      padding: 24,
+                      minHeight: 280,
+                      transition: 'all 0.22s ease',
+                      cursor: 'pointer',
+                      height: '100%',
                     }}
                   >
-                    <span
+                    <div
                       style={{
-                        background:
-                          player.status === 'talks'
-                            ? '#f59e0b'
-                            : player.status === 'interest'
-                            ? '#2563eb'
-                            : player.status === 'linked'
-                            ? '#64748b'
-                            : player.status === 'verbal'
-                            ? '#7c3aed'
-                            : player.status === 'official'
-                            ? '#16a34a'
-                            : '#444',
-                        color: 'white',
-                        padding: '6px 12px',
-                        borderRadius: 999,
-                        fontSize: 13,
-                        fontWeight: 700,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        marginBottom: 22,
+                        gap: 16,
                       }}
                     >
-                      {player.status ?? 'unknown'}
-                    </span>
+                      <div
+                        style={{
+                          width: 58,
+                          height: 58,
+                          borderRadius: 18,
+                          background:
+                            'linear-gradient(135deg, #c6a96b 0%, #6b5a2e 100%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 900,
+                          fontSize: 20,
+                          color: '#0b1020',
+                        }}
+                      >
+                        {getInitials(player.name)}
+                      </div>
 
-                    <span
+                      <span
+                        style={{
+                          background: getStatusColor(player.status),
+                          color: 'white',
+                          padding: '6px 12px',
+                          borderRadius: 999,
+                          fontSize: 12,
+                          fontWeight: 800,
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        {player.status ?? 'unknown'}
+                      </span>
+                    </div>
+
+                    <h2 style={{ fontSize: 26, marginBottom: 8 }}>
+                      {player.name}
+                    </h2>
+
+                    <div
                       style={{
-                        color:
-                          (player.fit_score ?? 0) >= 80
-                            ? '#4ade80'
-                            : (player.fit_score ?? 0) >= 70
-                            ? '#facc15'
-                            : '#f87171',
-                        fontWeight: 800,
-                        fontSize: 22,
+                        display: 'flex',
+                        gap: 8,
+                        flexWrap: 'wrap',
+                        marginBottom: 18,
                       }}
                     >
-                      {player.fit_score ?? '-'}
-                    </span>
-                  </div>
+                      <span
+                        style={{
+                          padding: '5px 10px',
+                          borderRadius: 999,
+                          background: '#0b1020',
+                          border: '1px solid #33415f',
+                          color: '#d1d5db',
+                          fontSize: 13,
+                        }}
+                      >
+                        {player.position ?? '-'}
+                      </span>
 
-                  <h2 style={{ fontSize: 26, marginBottom: 10 }}>
-                    {player.name}
-                  </h2>
+                      <span
+                        style={{
+                          padding: '5px 10px',
+                          borderRadius: 999,
+                          background: '#0b1020',
+                          border: '1px solid #33415f',
+                          color: '#d1d5db',
+                          fontSize: 13,
+                        }}
+                      >
+                        {player.nationality ?? '-'}
+                      </span>
+                    </div>
 
-                  <p style={{ color: '#bbb', marginBottom: 18 }}>
-                    {player.position} · {player.nationality}
-                  </p>
+                    <div style={{ marginBottom: 18 }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          marginBottom: 8,
+                          color: '#a8b0c2',
+                          fontSize: 14,
+                        }}
+                      >
+                        <span>전술 적합도</span>
+                        <strong
+                          style={{
+                            color:
+                              score >= 80
+                                ? '#4ade80'
+                                : score >= 70
+                                ? '#facc15'
+                                : '#f87171',
+                          }}
+                        >
+                          {score}/100
+                        </strong>
+                      </div>
 
-                  <div style={{ color: '#d1d5db', lineHeight: 1.8 }}>
-                    <p>신뢰도: {player.trust_level ?? '-'}</p>
-                    <p>예상 이적료: {player.fee ?? '-'}</p>
-                  </div>
-                </article>
-              </Link>
-            ))}
+                      <div
+                        style={{
+                          height: 9,
+                          borderRadius: 999,
+                          background: '#0b1020',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: `${score}%`,
+                            height: '100%',
+                            borderRadius: 999,
+                            background:
+                              score >= 80
+                                ? '#4ade80'
+                                : score >= 70
+                                ? '#facc15'
+                                : '#f87171',
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ color: '#d1d5db', lineHeight: 1.8 }}>
+                      <p>신뢰도: {player.trust_level ?? '-'}</p>
+                      <p>예상 이적료: {player.fee ?? '-'}</p>
+                    </div>
+                  </article>
+                </Link>
+              )
+            })}
           </div>
         )}
 
         <p style={{ color: '#777', fontSize: 13, marginTop: 36 }}>
-          본 사이트는 팬이 제작한 비공식 분석 플랫폼입니다. Tottenham Hotspur와 공식 제휴된 서비스가 아닙니다.
+          본 사이트는 팬이 제작한 비공식 분석 플랫폼입니다. Tottenham
+          Hotspur와 공식 제휴된 서비스가 아닙니다.
         </p>
       </div>
     </main>
