@@ -19,6 +19,8 @@ type Target = {
   trust_level: string | null
   fit_score: number | null
   fee: string | null
+  current_team: string | null
+  scout_tier: string | null
 }
 
 function getInitials(name: string) {
@@ -37,6 +39,14 @@ function getStatusColor(status: string | null) {
   if (status === 'verbal') return '#7c3aed'
   if (status === 'official') return '#16a34a'
   return '#475569'
+}
+
+function getTierColor(tier: string | null) {
+  if (tier === 'S') return '#facc15'
+  if (tier === 'A') return '#4ade80'
+  if (tier === 'B') return '#60a5fa'
+  if (tier === 'C') return '#94a3b8'
+  return '#64748b'
 }
 
 export default function HomePage() {
@@ -81,6 +91,15 @@ export default function HomePage() {
 
     if (sort === 'name') {
       result.sort((a, b) => a.name.localeCompare(b.name))
+    }
+
+    if (sort === 'tier') {
+      const order: Record<string, number> = { S: 4, A: 3, B: 2, C: 1 }
+      result.sort(
+        (a, b) =>
+          (order[b.scout_tier ?? ''] ?? 0) -
+          (order[a.scout_tier ?? ''] ?? 0)
+      )
     }
 
     return result
@@ -186,6 +205,7 @@ export default function HomePage() {
             }}
           >
             <option value="fit">적합도 높은 순</option>
+            <option value="tier">Scout 티어 높은 순</option>
             <option value="name">이름순</option>
           </select>
         </div>
@@ -202,6 +222,7 @@ export default function HomePage() {
           >
             {filteredTargets.map((player) => {
               const score = player.fit_score ?? 0
+              const tierColor = getTierColor(player.scout_tier)
 
               return (
                 <Link
@@ -229,7 +250,7 @@ export default function HomePage() {
                       border: '1px solid #26314f',
                       borderRadius: 24,
                       padding: 24,
-                      minHeight: 280,
+                      minHeight: 310,
                       transition: 'all 0.22s ease',
                       cursor: 'pointer',
                       height: '100%',
@@ -262,24 +283,57 @@ export default function HomePage() {
                         {getInitials(player.name)}
                       </div>
 
-                      <span
+                      <div
                         style={{
-                          background: getStatusColor(player.status),
-                          color: 'white',
-                          padding: '6px 12px',
-                          borderRadius: 999,
-                          fontSize: 12,
-                          fontWeight: 800,
-                          textTransform: 'uppercase',
+                          display: 'flex',
+                          gap: 8,
+                          alignItems: 'center',
+                          flexWrap: 'wrap',
+                          justifyContent: 'flex-end',
                         }}
                       >
-                        {player.status ?? 'unknown'}
-                      </span>
+                        <span
+                          style={{
+                            background: tierColor,
+                            color: '#0b1020',
+                            padding: '6px 10px',
+                            borderRadius: 999,
+                            fontSize: 12,
+                            fontWeight: 900,
+                          }}
+                        >
+                          {player.scout_tier ?? '-'} TIER
+                        </span>
+
+                        <span
+                          style={{
+                            background: getStatusColor(player.status),
+                            color: 'white',
+                            padding: '6px 12px',
+                            borderRadius: 999,
+                            fontSize: 12,
+                            fontWeight: 800,
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          {player.status ?? 'unknown'}
+                        </span>
+                      </div>
                     </div>
 
                     <h2 style={{ fontSize: 26, marginBottom: 8 }}>
                       {player.name}
                     </h2>
+
+                    <p
+                      style={{
+                        color: '#c6a96b',
+                        marginBottom: 14,
+                        fontWeight: 700,
+                      }}
+                    >
+                      현재 소속팀: {player.current_team ?? '-'}
+                    </p>
 
                     <div
                       style={{
