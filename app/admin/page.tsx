@@ -6,6 +6,7 @@ import { supabase } from '@/app/lib/supabase'
 interface Player {
   id: number
   name: string | null
+  slug: string | null
   position: string | null
   current_club: string | null
   nationality: string | null
@@ -16,28 +17,69 @@ interface Player {
 interface TransferCase {
   id: number
   player_id: number | null
-  team: string | null
   status: string | null
   trust_level: string | null
   source: string | null
   link_reason: string | null
   fee: string | null
   fit_score: number | null
+  scout_tier: string | null
+  pros: string[] | null
+  cons: string[] | null
+  conclusion: string | null
+  ready_now: string | null
+  risk_summary: string | null
+  role_summary: string | null
+  chemistry: string | null
 }
 
 interface RumorItem {
   transferCaseId: number
   playerId: number
   playerName: string
+  slug: string | null
   position: string | null
+  currentClub: string | null
+  nationality: string | null
+  age: number | null
   status: string | null
   trustLevel: string | null
+  source: string | null
+  linkReason: string | null
   fee: string | null
   fitScore: number | null
+  scoutTier: string | null
+  pros: string[] | null
+  cons: string[] | null
+  conclusion: string | null
+  readyNow: string | null
+  riskSummary: string | null
+  roleSummary: string | null
+  chemistry: string | null
+}
+
+function makeSlug(text: string) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9가-힣\s-]/g, '')
+    .replace(/\s+/g, '-')
+}
+
+function textToList(text: string) {
+  return text
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function listToText(items: string[] | null) {
+  return items?.join('\n') ?? ''
 }
 
 export default function AdminPage() {
   const [playerName, setPlayerName] = useState('')
+  const [slug, setSlug] = useState('')
   const [position, setPosition] = useState('')
   const [currentClub, setCurrentClub] = useState('')
   const [nationality, setNationality] = useState('')
@@ -48,28 +90,117 @@ export default function AdminPage() {
   const [source, setSource] = useState('')
   const [linkReason, setLinkReason] = useState('')
   const [fitScore, setFitScore] = useState('')
+  const [scoutTier, setScoutTier] = useState('B')
+  const [pros, setPros] = useState('')
+  const [cons, setCons] = useState('')
+  const [conclusion, setConclusion] = useState('')
+  const [readyNow, setReadyNow] = useState('')
+  const [riskSummary, setRiskSummary] = useState('')
+  const [roleSummary, setRoleSummary] = useState('')
+  const [chemistry, setChemistry] = useState('')
+
   const [players, setPlayers] = useState<Player[]>([])
   const [transferCases, setTransferCases] = useState<TransferCase[]>([])
+  const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null)
+  const [editingCaseId, setEditingCaseId] = useState<number | null>(null)
+
+  const [adminSearch, setAdminSearch] = useState('')
+  const [adminStatusFilter, setAdminStatusFilter] = useState('all')
+  const [adminTierFilter, setAdminTierFilter] = useState('all')
+  const [adminSort, setAdminSort] = useState('latest')
+
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const mergedRumors = useMemo(() => {
+  const mergedRumors = useMemo<RumorItem[]>(() => {
     const playerMap = new Map(players.map((player) => [player.id, player]))
+
     return transferCases.map((transferCase) => {
-      const player = transferCase.player_id ? playerMap.get(transferCase.player_id) : undefined
+      const player = transferCase.player_id
+        ? playerMap.get(transferCase.player_id)
+        : undefined
+
       return {
         transferCaseId: transferCase.id,
         playerId: player?.id ?? transferCase.player_id ?? 0,
         playerName: player?.name ?? '알 수 없음',
+        slug: player?.slug ?? null,
         position: player?.position ?? null,
+        currentClub: player?.current_club ?? null,
+        nationality: player?.nationality ?? null,
+        age: player?.age ?? null,
         status: transferCase.status,
         trustLevel: transferCase.trust_level,
+        source: transferCase.source,
+        linkReason: transferCase.link_reason,
         fee: transferCase.fee,
         fitScore: transferCase.fit_score,
+        scoutTier: transferCase.scout_tier,
+        pros: transferCase.pros,
+        cons: transferCase.cons,
+        conclusion: transferCase.conclusion,
+        readyNow: transferCase.ready_now,
+        riskSummary: transferCase.risk_summary,
+        roleSummary: transferCase.role_summary,
+        chemistry: transferCase.chemistry,
       }
     })
   }, [players, transferCases])
+
+  const filteredRumors = useMemo(() => {
+    let result = [...mergedRumors]
+
+    if (adminSearch.trim()) {
+      const keyword = adminSearch.toLowerCase()
+
+      result = result.filter((rumor) =>
+        [
+          rumor.playerName,
+          rumor.slug,
+          rumor.position,
+          rumor.currentClub,
+          rumor.nationality,
+          rumor.conclusion,
+        ]
+          .join(' ')
+          .toLowerCase()
+          .includes(keyword)
+      )
+    }
+
+    if (adminStatusFilter !== 'all') {
+      result = result.filter((rumor) => rumor.status === adminStatusFilter)
+    }
+
+    if (adminTierFilter !== 'all') {
+      result = result.filter((rumor) => rumor.scoutTier === adminTierFilter)
+    }
+
+    if (adminSort === 'fit') {
+      result.sort((a, b) => (b.fitScore ?? 0) - (a.fitScore ?? 0))
+    }
+
+    if (adminSort === 'name') {
+      result.sort((a, b) => a.playerName.localeCompare(b.playerName))
+    }
+
+    if (adminSort === 'tier') {
+      const order: Record<string, number> = { S: 5, A: 4, B: 3, C: 2, D: 1 }
+
+      result.sort(
+        (a, b) =>
+          (order[b.scoutTier ?? ''] ?? 0) -
+          (order[a.scoutTier ?? ''] ?? 0)
+      )
+    }
+
+    if (adminSort === 'latest') {
+      result.sort((a, b) => b.transferCaseId - a.transferCaseId)
+    }
+
+    return result
+  }, [mergedRumors, adminSearch, adminStatusFilter, adminTierFilter, adminSort])
 
   useEffect(() => {
     loadRumors()
@@ -81,22 +212,24 @@ export default function AdminPage() {
 
     const playersResult = await supabase
       .from('players')
-      .select('id, name, position, current_club, nationality, age')
+      .select('id, name, slug, position, current_club, nationality, age, player_type')
       .eq('player_type', 'rumor')
       .order('id', { ascending: false })
 
     const transferCasesResult = await supabase
       .from('transfer_cases')
-      .select('id, player_id, team, status, trust_level, source, link_reason, fee, fit_score')
+      .select(
+        'id, player_id, status, trust_level, source, link_reason, fee, fit_score, scout_tier, pros, cons, conclusion, ready_now, risk_summary, role_summary, chemistry'
+      )
       .order('id', { ascending: false })
 
     if (playersResult.error) {
-      setError('플레이어 데이터를 불러오는 중 오류가 발생했습니다.')
+      setError(`플레이어 데이터 오류: ${playersResult.error.message}`)
       return
     }
 
     if (transferCasesResult.error) {
-      setError('이적 케이스 데이터를 불러오는 중 오류가 발생했습니다.')
+      setError(`이적 케이스 데이터 오류: ${transferCasesResult.error.message}`)
       return
     }
 
@@ -104,54 +237,11 @@ export default function AdminPage() {
     setTransferCases(transferCasesResult.data ?? [])
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setLoading(true)
-    setMessage('')
-    setError('')
-
-    const playerPayload = {
-      name: playerName,
-      position,
-      current_club: currentClub,
-      nationality,
-      age: age ? Number(age) : null,
-      player_type: 'rumor',
-    }
-
-    const { data: playerData, error: playerError } = await supabase
-      .from('players')
-      .insert([playerPayload])
-      .select('id')
-      .single()
-
-    if (playerError || !playerData) {
-      setError(`저장 실패: ${playerError?.message ?? '선수 정보를 저장하지 못했습니다.'}`)
-      setLoading(false)
-      return
-    }
-
-    const casePayload = {
-      player_id: playerData.id,
-      team: '토트넘',
-      status,
-      trust_level: trustLevel,
-      source: source || null,
-      link_reason: linkReason || null,
-      fee: fee || null,
-      fit_score: fitScore ? Number(fitScore) : null,
-    }
-
-    const { error: caseError } = await supabase.from('transfer_cases').insert([casePayload])
-
-    if (caseError) {
-      setError(`저장 실패: ${caseError.message}`)
-      setLoading(false)
-      return
-    }
-
-    setMessage('저장됐습니다!')
+  function resetForm() {
+    setEditingPlayerId(null)
+    setEditingCaseId(null)
     setPlayerName('')
+    setSlug('')
     setPosition('')
     setCurrentClub('')
     setNationality('')
@@ -162,243 +252,385 @@ export default function AdminPage() {
     setSource('')
     setLinkReason('')
     setFitScore('')
+    setScoutTier('B')
+    setPros('')
+    setCons('')
+    setConclusion('')
+    setReadyNow('')
+    setRiskSummary('')
+    setRoleSummary('')
+    setChemistry('')
+  }
+
+  function handleEdit(rumor: RumorItem) {
+    setEditingPlayerId(rumor.playerId)
+    setEditingCaseId(rumor.transferCaseId)
+    setMessage('')
+    setError('')
+
+    setPlayerName(rumor.playerName ?? '')
+    setSlug(rumor.slug ?? '')
+    setPosition(rumor.position ?? '')
+    setCurrentClub(rumor.currentClub ?? '')
+    setNationality(rumor.nationality ?? '')
+    setAge(rumor.age ? String(rumor.age) : '')
+    setFee(rumor.fee ?? '')
+    setStatus(rumor.status ?? 'talks')
+    setTrustLevel(rumor.trustLevel ?? '보통')
+    setSource(rumor.source ?? '')
+    setLinkReason(rumor.linkReason ?? '')
+    setFitScore(rumor.fitScore !== null ? String(rumor.fitScore) : '')
+    setScoutTier(rumor.scoutTier ?? 'B')
+    setPros(listToText(rumor.pros))
+    setCons(listToText(rumor.cons))
+    setConclusion(rumor.conclusion ?? '')
+    setReadyNow(rumor.readyNow ?? '')
+    setRiskSummary(rumor.riskSummary ?? '')
+    setRoleSummary(rumor.roleSummary ?? '')
+    setChemistry(rumor.chemistry ?? '')
+
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    setLoading(true)
+    setMessage('')
+    setError('')
+
+    const finalSlug = slug.trim() || makeSlug(playerName)
+
+    const playerPayload = {
+      name: playerName.trim(),
+      slug: finalSlug,
+      position: position.trim(),
+      current_club: currentClub.trim(),
+      nationality: nationality.trim(),
+      age: age ? Number(age) : null,
+      player_type: 'rumor',
+    }
+
+    const casePayload = {
+      team: '토트넘',
+      status,
+      trust_level: trustLevel,
+      source: source.trim() || null,
+      link_reason: linkReason.trim() || null,
+      fee: fee.trim() || null,
+      fit_score: fitScore ? Number(fitScore) : null,
+      scout_tier: scoutTier,
+      pros: textToList(pros),
+      cons: textToList(cons),
+      conclusion: conclusion.trim() || null,
+      ready_now: readyNow.trim() || null,
+      risk_summary: riskSummary.trim() || null,
+      role_summary: roleSummary.trim() || null,
+      chemistry: chemistry.trim() || null,
+    }
+
+    if (editingPlayerId && editingCaseId) {
+      const { error: playerUpdateError } = await supabase
+        .from('players')
+        .update(playerPayload)
+        .eq('id', editingPlayerId)
+
+      if (playerUpdateError) {
+        setError(`선수 수정 실패: ${playerUpdateError.message}`)
+        setLoading(false)
+        return
+      }
+
+      const { error: caseUpdateError } = await supabase
+        .from('transfer_cases')
+        .update(casePayload)
+        .eq('id', editingCaseId)
+
+      if (caseUpdateError) {
+        setError(`이적 케이스 수정 실패: ${caseUpdateError.message}`)
+        setLoading(false)
+        return
+      }
+
+      setMessage('수정 완료!')
+    } else {
+      const { data: playerData, error: playerInsertError } = await supabase
+        .from('players')
+        .insert([playerPayload])
+        .select('id')
+        .single()
+
+      if (playerInsertError || !playerData) {
+        setError(`선수 저장 실패: ${playerInsertError?.message ?? '선수 정보를 저장하지 못했습니다.'}`)
+        setLoading(false)
+        return
+      }
+
+      const { error: caseInsertError } = await supabase.from('transfer_cases').insert([
+        {
+          ...casePayload,
+          player_id: playerData.id,
+        },
+      ])
+
+      if (caseInsertError) {
+        setError(`이적 케이스 저장 실패: ${caseInsertError.message}`)
+        setLoading(false)
+        return
+      }
+
+      setMessage('저장 완료!')
+    }
+
+    resetForm()
     setLoading(false)
     await loadRumors()
   }
 
   async function handleDelete(playerId: number) {
+    if (!playerId) return
+
+    const ok = window.confirm('정말 삭제할까요?')
+    if (!ok) return
+
     setError('')
     setMessage('')
     setLoading(true)
 
-    const { error: caseDeleteError } = await supabase.from('transfer_cases').delete().eq('player_id', playerId)
+    const { error: caseDeleteError } = await supabase
+      .from('transfer_cases')
+      .delete()
+      .eq('player_id', playerId)
+
     if (caseDeleteError) {
       setError(`삭제 실패: ${caseDeleteError.message}`)
       setLoading(false)
       return
     }
 
-    const { error: playerDeleteError } = await supabase.from('players').delete().eq('id', playerId)
+    const { error: playerDeleteError } = await supabase
+      .from('players')
+      .delete()
+      .eq('id', playerId)
+
     if (playerDeleteError) {
       setError(`삭제 실패: ${playerDeleteError.message}`)
       setLoading(false)
       return
     }
 
-    setMessage('삭제됐습니다!')
+    if (editingPlayerId === playerId) resetForm()
+
+    setMessage('삭제 완료!')
     setLoading(false)
     await loadRumors()
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0e1a] text-white py-10">
+    <main className="min-h-screen bg-[#0a0e1a] py-10 text-white">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <section className="mb-10">
-          <h1 className="text-4xl font-bold text-[#c4a35a] mb-3">관리자 페이지</h1>
-          <p className="text-[#d1c89b] max-w-3xl leading-8">
-            선수 루머를 등록하고 현재 저장된 이적 케이스를 확인하세요.
+          <p className="mb-2 text-sm font-black tracking-[3px] text-[#c4a35a]">
+            ADMIN CONTROL
+          </p>
+          <h1 className="mb-3 text-4xl font-bold text-[#c4a35a]">관리자 페이지</h1>
+          <p className="max-w-3xl leading-8 text-[#d1c89b]">
+            선수 루머를 등록, 수정, 삭제하고 검색/필터로 관리할 수 있습니다.
           </p>
         </section>
 
-        <section className="mb-10 rounded-[28px] border border-[#c4a35a]/20 bg-[#101426] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
-          <h2 className="text-2xl font-semibold text-white mb-6">이적 루머 입력 폼</h2>
+        <section className="mb-10 rounded-[28px] border border-[#c4a35a]/20 bg-[#101426] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.35)] sm:p-8">
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-2xl font-semibold text-white">
+              {editingPlayerId ? '이적 루머 수정 폼' : '이적 루머 입력 폼'}
+            </h2>
+
+            {editingPlayerId ? (
+              <button
+                type="button"
+                onClick={resetForm}
+                className="rounded-2xl border border-[#c4a35a]/30 px-4 py-2 text-sm font-semibold text-[#d1c89b] transition hover:bg-[#c4a35a]/10"
+              >
+                수정 취소
+              </button>
+            ) : null}
+          </div>
 
           <form onSubmit={handleSubmit} className="grid gap-6">
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm font-semibold text-[#f7f4e7]">
-                선수 이름
-                <input
-                  type="text"
-                  className="mt-2 w-full rounded-2xl border border-[#c4a35a]/30 bg-[#141a2f] px-4 py-3 text-white outline-none transition focus:border-[#c4a35a]"
-                  value={playerName}
-                  onChange={(event) => setPlayerName(event.target.value)}
-                  placeholder="예: 손흥민"
-                  required
-                />
-              </label>
+              <TextInput label="선수 이름" value={playerName} onChange={(value) => {
+                setPlayerName(value)
+                if (!slug) setSlug(makeSlug(value))
+              }} placeholder="예: Xavi Simons" required />
 
-              <label className="block text-sm font-semibold text-[#f7f4e7]">
-                포지션
-                <input
-                  type="text"
-                  className="mt-2 w-full rounded-2xl border border-[#c4a35a]/30 bg-[#141a2f] px-4 py-3 text-white outline-none transition focus:border-[#c4a35a]"
-                  value={position}
-                  onChange={(event) => setPosition(event.target.value)}
-                  placeholder="예: FW"
-                  required
-                />
-              </label>
+              <TextInput label="slug" value={slug} onChange={setSlug} placeholder="예: xavi-simons" required />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm font-semibold text-[#f7f4e7]">
-                현재 소속팀
-                <input
-                  type="text"
-                  className="mt-2 w-full rounded-2xl border border-[#c4a35a]/30 bg-[#141a2f] px-4 py-3 text-white outline-none transition focus:border-[#c4a35a]"
-                  value={currentClub}
-                  onChange={(event) => setCurrentClub(event.target.value)}
-                  placeholder="예: 토트넘"
-                  required
-                />
-              </label>
-
-              <label className="block text-sm font-semibold text-[#f7f4e7]">
-                국적
-                <input
-                  type="text"
-                  className="mt-2 w-full rounded-2xl border border-[#c4a35a]/30 bg-[#141a2f] px-4 py-3 text-white outline-none transition focus:border-[#c4a35a]"
-                  value={nationality}
-                  onChange={(event) => setNationality(event.target.value)}
-                  placeholder="예: 대한민국"
-                  required
-                />
-              </label>
+              <TextInput label="포지션" value={position} onChange={setPosition} placeholder="예: AMF" required />
+              <TextInput label="현재 소속팀" value={currentClub} onChange={setCurrentClub} placeholder="예: RB Leipzig" required />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm font-semibold text-[#f7f4e7]">
-                나이
-                <input
-                  type="number"
-                  min={0}
-                  className="mt-2 w-full rounded-2xl border border-[#c4a35a]/30 bg-[#141a2f] px-4 py-3 text-white outline-none transition focus:border-[#c4a35a]"
-                  value={age}
-                  onChange={(event) => setAge(event.target.value)}
-                  placeholder="예: 29"
-                  required
-                />
-              </label>
-
-              <label className="block text-sm font-semibold text-[#f7f4e7]">
-                이적료
-                <input
-                  type="text"
-                  className="mt-2 w-full rounded-2xl border border-[#c4a35a]/30 bg-[#141a2f] px-4 py-3 text-white outline-none transition focus:border-[#c4a35a]"
-                  value={fee}
-                  onChange={(event) => setFee(event.target.value)}
-                  placeholder="예: 500억"
-                />
-              </label>
+              <TextInput label="국적" value={nationality} onChange={setNationality} placeholder="예: Netherlands" required />
+              <TextInput label="나이" value={age} onChange={setAge} placeholder="예: 23" type="number" />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm font-semibold text-[#f7f4e7]">
-                상태
-                <select
-                  className="mt-2 w-full rounded-2xl border border-[#c4a35a]/30 bg-[#141a2f] px-4 py-3 text-white outline-none transition focus:border-[#c4a35a]"
-                  value={status}
-                  onChange={(event) => setStatus(event.target.value)}
-                >
-                  <option value="talks">talks</option>
-                  <option value="interest">interest</option>
-                  <option value="linked">linked</option>
-                  <option value="official">official</option>
-                </select>
-              </label>
-
-              <label className="block text-sm font-semibold text-[#f7f4e7]">
-                신뢰도
-                <select
-                  className="mt-2 w-full rounded-2xl border border-[#c4a35a]/30 bg-[#141a2f] px-4 py-3 text-white outline-none transition focus:border-[#c4a35a]"
-                  value={trustLevel}
-                  onChange={(event) => setTrustLevel(event.target.value)}
-                >
-                  <option value="높음">높음</option>
-                  <option value="보통">보통</option>
-                  <option value="낮음">낮음</option>
-                </select>
-              </label>
+              <SelectInput label="상태" value={status} onChange={setStatus} options={['talks', 'interest', 'linked', 'official']} />
+              <SelectInput label="Scout Tier" value={scoutTier} onChange={setScoutTier} options={['S', 'A', 'B', 'C', 'D']} />
             </div>
 
-            <label className="block text-sm font-semibold text-[#f7f4e7]">
-              출처
-              <input
-                type="text"
-                className="mt-2 w-full rounded-2xl border border-[#c4a35a]/30 bg-[#141a2f] px-4 py-3 text-white outline-none transition focus:border-[#c4a35a]"
-                value={source}
-                onChange={(event) => setSource(event.target.value)}
-                placeholder="예: 현지 언론"
-              />
-            </label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <SelectInput label="신뢰도" value={trustLevel} onChange={setTrustLevel} options={['높음', '보통', '낮음']} />
+              <TextInput label="적합도 점수" value={fitScore} onChange={setFitScore} placeholder="0-100" type="number" />
+            </div>
 
-            <label className="block text-sm font-semibold text-[#f7f4e7]">
-              링크 이유
-              <textarea
-                className="mt-2 w-full rounded-2xl border border-[#c4a35a]/30 bg-[#141a2f] px-4 py-3 text-white outline-none transition focus:border-[#c4a35a] min-h-[120px] resize-vertical"
-                value={linkReason}
-                onChange={(event) => setLinkReason(event.target.value)}
-                placeholder="루머 관련 설명을 입력하세요"
-              />
-            </label>
+            <TextInput label="이적료" value={fee} onChange={setFee} placeholder="예: €75m" />
+            <TextInput label="출처" value={source} onChange={setSource} placeholder="예: Fabrizio Romano" />
 
-            <label className="block text-sm font-semibold text-[#f7f4e7]">
-              적합도 점수
-              <input
-                type="number"
-                min={0}
-                max={100}
-                className="mt-2 w-full rounded-2xl border border-[#c4a35a]/30 bg-[#141a2f] px-4 py-3 text-white outline-none transition focus:border-[#c4a35a]"
-                value={fitScore}
-                onChange={(event) => setFitScore(event.target.value)}
-                placeholder="0-100"
-              />
-            </label>
+            <TextArea label="링크 이유 / 분석 문장" value={linkReason} onChange={setLinkReason} placeholder="예: 토트넘은 창의적인 공격형 미드필더 보강이 필요하다." />
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <TextArea label="장점" value={pros} onChange={setPros} placeholder={'한 줄에 하나씩 입력\n예: 드리블 돌파\n예: 전진 패스'} />
+              <TextArea label="단점" value={cons} onChange={setCons} placeholder={'한 줄에 하나씩 입력\n예: 높은 이적료\n예: 수비 집중력 기복'} />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <TextArea label="한줄 결론" value={conclusion} onChange={setConclusion} placeholder="예: 포스테코글루 전술에 가장 잘 어울리는 창의형 공격 자원" />
+              <TextArea label="즉시전력감" value={readyNow} onChange={setReadyNow} placeholder="예: 매우 높음. 즉시 선발 경쟁 가능" />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <TextArea label="리스크" value={riskSummary} onChange={setRiskSummary} placeholder="예: 높은 이적료와 빅클럽 경쟁 가능성이 변수" />
+              <TextArea label="전술 역할" value={roleSummary} onChange={setRoleSummary} placeholder="예: 하프스페이스 전개, 2선 침투" />
+            </div>
+
+            <TextInput label="케미 좋은 선수" value={chemistry} onChange={setChemistry} placeholder="예: 손흥민, 매디슨, 우도기" />
 
             <button
               type="submit"
               disabled={loading}
               className="inline-flex items-center justify-center rounded-2xl bg-[#c4a35a] px-6 py-3 text-sm font-bold text-[#0a0e1a] transition hover:bg-[#d1b661] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? '저장중...' : '저장'}
+              {loading ? '처리중...' : editingPlayerId ? '수정 저장' : '저장'}
             </button>
           </form>
 
           {message ? <p className="mt-5 text-green-400">{message}</p> : null}
-          {error ? <p className="mt-5 text-red-400 break-words">{error}</p> : null}
+          {error ? <p className="mt-5 break-words text-red-400">{error}</p> : null}
         </section>
 
-        <section className="rounded-[28px] border border-[#c4a35a]/20 bg-[#101426] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-2xl font-semibold text-white">현재 등록된 루머 목록</h2>
-            <span className="text-sm text-[#d1c89b]">총 {mergedRumors.length}개</span>
+        <section className="rounded-[28px] border border-[#c4a35a]/20 bg-[#101426] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.35)] sm:p-8">
+          <div className="mb-6">
+            <h2 className="text-2xl font-semibold text-white">등록된 루머 관리</h2>
+            <p className="mt-2 text-sm text-[#d1c89b]">
+              전체 {mergedRumors.length}개 · 표시 {filteredRumors.length}개
+            </p>
           </div>
 
-          {mergedRumors.length === 0 ? (
-            <p className="mt-6 text-[#d1c89b]">등록된 루머가 없습니다.</p>
+          <div className="mb-6 grid gap-3 md:grid-cols-4">
+            <input
+              value={adminSearch}
+              onChange={(event) => setAdminSearch(event.target.value)}
+              placeholder="선수명, 포지션, 팀 검색"
+              className="rounded-2xl border border-[#c4a35a]/30 bg-[#141a2f] px-4 py-3 text-white outline-none focus:border-[#c4a35a]"
+            />
+
+            <select
+              value={adminStatusFilter}
+              onChange={(event) => setAdminStatusFilter(event.target.value)}
+              className="rounded-2xl border border-[#c4a35a]/30 bg-[#141a2f] px-4 py-3 text-white outline-none focus:border-[#c4a35a]"
+            >
+              <option value="all">전체 상태</option>
+              <option value="talks">talks</option>
+              <option value="interest">interest</option>
+              <option value="linked">linked</option>
+              <option value="official">official</option>
+            </select>
+
+            <select
+              value={adminTierFilter}
+              onChange={(event) => setAdminTierFilter(event.target.value)}
+              className="rounded-2xl border border-[#c4a35a]/30 bg-[#141a2f] px-4 py-3 text-white outline-none focus:border-[#c4a35a]"
+            >
+              <option value="all">전체 Tier</option>
+              <option value="S">S Tier</option>
+              <option value="A">A Tier</option>
+              <option value="B">B Tier</option>
+              <option value="C">C Tier</option>
+              <option value="D">D Tier</option>
+            </select>
+
+            <select
+              value={adminSort}
+              onChange={(event) => setAdminSort(event.target.value)}
+              className="rounded-2xl border border-[#c4a35a]/30 bg-[#141a2f] px-4 py-3 text-white outline-none focus:border-[#c4a35a]"
+            >
+              <option value="latest">최신 등록순</option>
+              <option value="fit">적합도 높은 순</option>
+              <option value="tier">Tier 높은 순</option>
+              <option value="name">이름순</option>
+            </select>
+          </div>
+
+          {filteredRumors.length === 0 ? (
+            <p className="text-[#d1c89b]">조건에 맞는 루머가 없습니다.</p>
           ) : (
-            <div className="mt-6 grid gap-5">
-              {mergedRumors.map((rumor) => (
-                <article key={rumor.transferCaseId} className="rounded-[20px] border border-[#c4a35a]/15 bg-[#0f1424] p-6">
-                  <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start">
+            <div className="grid gap-5">
+              {filteredRumors.map((rumor) => (
+                <article
+                  key={rumor.transferCaseId}
+                  className="rounded-[22px] border border-[#c4a35a]/15 bg-[#0f1424] p-5"
+                >
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                       <p className="text-xl font-semibold text-[#c4a35a]">{rumor.playerName}</p>
-                      <p className="mt-2 text-sm text-[#d1c89b]">포지션: {rumor.position ?? '-'}</p>
+                      <p className="mt-2 text-sm text-[#d1c89b]">
+                        {rumor.position ?? '-'} · {rumor.nationality ?? '-'} · {rumor.age ?? '-'}세
+                      </p>
+                      <p className="mt-1 text-sm text-[#d1c89b]">
+                        현재 소속팀: {rumor.currentClub ?? '-'} / slug: {rumor.slug ?? '-'}
+                      </p>
+                      <p className="mt-3 line-clamp-2 text-sm leading-6 text-[#a8b0c2]">
+                        {rumor.conclusion ?? '한줄 결론 없음'}
+                      </p>
                     </div>
+
                     <div className="flex flex-wrap gap-2">
-                      <span className="rounded-full border border-[#c4a35a]/25 bg-[#15203f] px-3 py-1 text-sm text-[#d1c89b]">상태: {rumor.status ?? '-'}</span>
-                      <span className="rounded-full border border-[#c4a35a]/25 bg-[#15203f] px-3 py-1 text-sm text-[#d1c89b]">적합도: {rumor.fitScore ?? '-'}</span>
+                      <Badge>상태: {rumor.status ?? '-'}</Badge>
+                      <Badge>Tier: {rumor.scoutTier ?? '-'}</Badge>
+                      <Badge>적합도: {rumor.fitScore ?? '-'}</Badge>
+                      <Badge>신뢰도: {rumor.trustLevel ?? '-'}</Badge>
                     </div>
                   </div>
 
-                  <div className="mt-5 grid gap-4 sm:grid-cols-3">
-                    <div>
-                      <p className="text-sm text-[#f7f4e7]">이적료</p>
-                      <p className="mt-1 text-base text-[#d1c89b]">{rumor.fee ?? '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-[#f7f4e7]">신뢰도</p>
-                      <p className="mt-1 text-base text-[#d1c89b]">{rumor.trustLevel ?? '-'}</p>
-                    </div>
-                    <div className="sm:col-span-3">
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(rumor.playerId)}
-                        className="rounded-2xl border border-red-500/30 bg-red-600/10 px-4 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-600/20"
-                      >
-                        삭제
-                      </button>
-                    </div>
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleEdit(rumor)}
+                      disabled={loading}
+                      className="rounded-2xl border border-blue-500/30 bg-blue-600/10 px-4 py-2 text-sm font-semibold text-blue-200 transition hover:bg-blue-600/20 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      수정
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(rumor.playerId)}
+                      disabled={loading}
+                      className="rounded-2xl border border-red-500/30 bg-red-600/10 px-4 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-600/20 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      삭제
+                    </button>
+
+                    <a
+                      href={`/player/${rumor.slug}`}
+                      target="_blank"
+                      className="rounded-2xl border border-[#c4a35a]/30 bg-[#c4a35a]/10 px-4 py-2 text-sm font-semibold text-[#d1c89b] no-underline transition hover:bg-[#c4a35a]/20"
+                    >
+                      상세 보기
+                    </a>
                   </div>
                 </article>
               ))}
@@ -407,5 +639,96 @@ export default function AdminPage() {
         </section>
       </div>
     </main>
+  )
+}
+
+function TextInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+  required,
+  type = 'text',
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+  required?: boolean
+  type?: string
+}) {
+  return (
+    <label className="block text-sm font-semibold text-[#f7f4e7]">
+      {label}
+      <input
+        type={type}
+        value={value}
+        required={required}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-2 w-full rounded-2xl border border-[#c4a35a]/30 bg-[#141a2f] px-4 py-3 text-white outline-none transition focus:border-[#c4a35a]"
+        placeholder={placeholder}
+      />
+    </label>
+  )
+}
+
+function TextArea({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+}) {
+  return (
+    <label className="block text-sm font-semibold text-[#f7f4e7]">
+      {label}
+      <textarea
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-2 min-h-[120px] w-full resize-y rounded-2xl border border-[#c4a35a]/30 bg-[#141a2f] px-4 py-3 text-white outline-none transition focus:border-[#c4a35a]"
+        placeholder={placeholder}
+      />
+    </label>
+  )
+}
+
+function SelectInput({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  options: string[]
+}) {
+  return (
+    <label className="block text-sm font-semibold text-[#f7f4e7]">
+      {label}
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-2 w-full rounded-2xl border border-[#c4a35a]/30 bg-[#141a2f] px-4 py-3 text-white outline-none transition focus:border-[#c4a35a]"
+      >
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
+function Badge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="rounded-full border border-[#c4a35a]/25 bg-[#15203f] px-3 py-1 text-sm text-[#d1c89b]">
+      {children}
+    </span>
   )
 }

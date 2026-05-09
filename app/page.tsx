@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
@@ -13,14 +14,12 @@ type Target = {
   case_id: number
   name: string
   slug: string
-  nationality: string | null
-  position: string | null
   status: string | null
-  trust_level: string | null
   fit_score: number | null
-  fee: string | null
   current_team: string | null
   scout_tier: string | null
+  conclusion: string | null
+  position: string | null
 }
 
 function getInitials(name: string) {
@@ -45,14 +44,22 @@ function getTierColor(tier: string | null) {
   if (tier === 'S') return '#facc15'
   if (tier === 'A') return '#4ade80'
   if (tier === 'B') return '#60a5fa'
-  if (tier === 'C') return '#94a3b8'
+  if (tier === 'C') return '#f97316'
   return '#64748b'
+}
+
+function getScoreColor(score: number) {
+  if (score >= 85) return '#4ade80'
+  if (score >= 70) return '#facc15'
+  return '#f87171'
 }
 
 export default function HomePage() {
   const [targets, setTargets] = useState<Target[]>([])
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('all')
+  const [tier, setTier] = useState('all')
+  const [position, setPosition] = useState('all')
   const [sort, setSort] = useState('fit')
 
   useEffect(() => {
@@ -72,17 +79,39 @@ export default function HomePage() {
     fetchTargets()
   }, [])
 
+  const positionOptions = useMemo(() => {
+    const unique = new Set(
+      targets
+        .map((player) => player.position)
+        .filter((item): item is string => Boolean(item))
+    )
+
+    return Array.from(unique).sort()
+  }, [targets])
+
   const filteredTargets = useMemo(() => {
     let result = [...targets]
 
     if (search.trim()) {
+      const keyword = search.toLowerCase()
       result = result.filter((player) =>
-        player.name.toLowerCase().includes(search.toLowerCase())
+        [player.name, player.current_team, player.conclusion, player.position]
+          .join(' ')
+          .toLowerCase()
+          .includes(keyword)
       )
     }
 
     if (status !== 'all') {
       result = result.filter((player) => player.status === status)
+    }
+
+    if (tier !== 'all') {
+      result = result.filter((player) => player.scout_tier === tier)
+    }
+
+    if (position !== 'all') {
+      result = result.filter((player) => player.position === position)
     }
 
     if (sort === 'fit') {
@@ -94,7 +123,8 @@ export default function HomePage() {
     }
 
     if (sort === 'tier') {
-      const order: Record<string, number> = { S: 4, A: 3, B: 2, C: 1 }
+      const order: Record<string, number> = { S: 5, A: 4, B: 3, C: 2, D: 1 }
+
       result.sort(
         (a, b) =>
           (order[b.scout_tier ?? ''] ?? 0) -
@@ -103,336 +133,240 @@ export default function HomePage() {
     }
 
     return result
-  }, [targets, search, status, sort])
+  }, [targets, search, status, tier, position, sort])
+
+  function resetFilters() {
+    setSearch('')
+    setStatus('all')
+    setTier('all')
+    setPosition('all')
+    setSort('fit')
+  }
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        background:
-          'radial-gradient(circle at top, #17213a 0%, #0b1020 45%, #050816 100%)',
-        color: 'white',
-        padding: '40px 24px',
-      }}
-    >
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ marginBottom: 34 }}>
-          <p
-            style={{
-              color: '#c6a96b',
-              fontSize: 13,
-              fontWeight: 800,
-              letterSpacing: 3,
-              marginBottom: 10,
-            }}
-          >
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#17213a_0%,#0b1020_45%,#050816_100%)] px-4 py-8 text-white sm:px-6 sm:py-10">
+      <div className="mx-auto max-w-[1220px]">
+        <motion.section
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45 }}
+          className="mb-8"
+        >
+          <p className="mb-2 text-[13px] font-black tracking-[3px] text-[#c6a96b]">
             TRANSFER INTELLIGENCE
           </p>
 
-          <h1
-            style={{
-              fontSize: 46,
-              fontWeight: 900,
-              marginBottom: 12,
-              color: '#ffffff',
-              letterSpacing: 1,
-            }}
-          >
+          <h1 className="mb-3 text-4xl font-black tracking-wide text-white sm:text-5xl">
             SPURS SCOUT
           </h1>
 
-          <p style={{ color: '#a8b0c2', maxWidth: 620, lineHeight: 1.7 }}>
-            Tottenham 팬들을 위한 비공식 이적 분석 플랫폼입니다. 선수 사진과
-            구단 로고 없이 자체 분석 데이터와 안전한 UI 요소만 사용합니다.
+          <p className="max-w-[690px] leading-8 text-[#a8b0c2]">
+            Tottenham 팬들을 위한 비공식 이적 분석 플랫폼입니다. 루머를 단순히
+            모으는 것이 아니라, 전술 적합도와 Scout Tier로 영입 가치를 판단합니다.
           </p>
-        </div>
+        </motion.section>
 
-        <div
-          style={{
-            display: 'flex',
-            gap: 12,
-            flexWrap: 'wrap',
-            marginBottom: 32,
-            padding: 16,
-            borderRadius: 20,
-            background: 'rgba(17, 22, 42, 0.75)',
-            border: '1px solid #26314f',
-          }}
+        <motion.section
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.08 }}
+          className="mb-8 rounded-[22px] border border-[#26314f] bg-[rgba(17,22,42,0.78)] p-4"
         >
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="선수 이름 검색"
-            style={{
-              padding: 12,
-              borderRadius: 12,
-              border: '1px solid #33415f',
-              background: '#0b1020',
-              color: 'white',
-              minWidth: 220,
-              outline: 'none',
-            }}
-          />
+          <div className="grid gap-3 md:grid-cols-6">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="선수 이름 / 팀 검색"
+              className="rounded-2xl border border-[#33415f] bg-[#0b1020] px-4 py-3 text-white outline-none transition focus:border-[#c6a96b] md:col-span-2"
+            />
 
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            style={{
-              padding: 12,
-              borderRadius: 12,
-              border: '1px solid #33415f',
-              background: '#0b1020',
-              color: 'white',
-            }}
-          >
-            <option value="all">전체 상태</option>
-            <option value="linked">linked</option>
-            <option value="interest">interest</option>
-            <option value="talks">talks</option>
-            <option value="verbal">verbal</option>
-            <option value="official">official</option>
-          </select>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="rounded-2xl border border-[#33415f] bg-[#0b1020] px-4 py-3 text-white outline-none transition focus:border-[#c6a96b]"
+            >
+              <option value="all">전체 상태</option>
+              <option value="linked">linked</option>
+              <option value="interest">interest</option>
+              <option value="talks">talks</option>
+              <option value="verbal">verbal</option>
+              <option value="official">official</option>
+            </select>
 
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            style={{
-              padding: 12,
-              borderRadius: 12,
-              border: '1px solid #33415f',
-              background: '#0b1020',
-              color: 'white',
-            }}
-          >
-            <option value="fit">적합도 높은 순</option>
-            <option value="tier">Scout 티어 높은 순</option>
-            <option value="name">이름순</option>
-          </select>
-        </div>
+            <select
+              value={tier}
+              onChange={(e) => setTier(e.target.value)}
+              className="rounded-2xl border border-[#33415f] bg-[#0b1020] px-4 py-3 text-white outline-none transition focus:border-[#c6a96b]"
+            >
+              <option value="all">전체 Tier</option>
+              <option value="S">S Tier</option>
+              <option value="A">A Tier</option>
+              <option value="B">B Tier</option>
+              <option value="C">C Tier</option>
+              <option value="D">D Tier</option>
+            </select>
+
+            <select
+              value={position}
+              onChange={(e) => setPosition(e.target.value)}
+              className="rounded-2xl border border-[#33415f] bg-[#0b1020] px-4 py-3 text-white outline-none transition focus:border-[#c6a96b]"
+            >
+              <option value="all">전체 포지션</option>
+              {positionOptions.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="rounded-2xl border border-[#33415f] bg-[#0b1020] px-4 py-3 text-white outline-none transition focus:border-[#c6a96b]"
+            >
+              <option value="fit">적합도 높은 순</option>
+              <option value="tier">Scout 티어 높은 순</option>
+              <option value="name">이름순</option>
+            </select>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-[#a8b0c2]">
+              전체 {targets.length}명 · 표시 {filteredTargets.length}명
+            </p>
+
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="rounded-full border border-[#c6a96b]/30 px-4 py-2 text-sm font-bold text-[#c6a96b] transition hover:bg-[#c6a96b]/10"
+            >
+              필터 초기화
+            </button>
+          </div>
+        </motion.section>
 
         {filteredTargets.length === 0 ? (
-          <p style={{ color: '#aaa' }}>조건에 맞는 선수가 없습니다.</p>
-        ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: 24,
-            }}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-[#aaa]"
           >
-            {filteredTargets.map((player) => {
+            조건에 맞는 선수가 없습니다.
+          </motion.p>
+        ) : (
+          <section className="grid gap-6 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
+            {filteredTargets.map((player, index) => {
               const score = player.fit_score ?? 0
+              const scoreColor = getScoreColor(score)
               const tierColor = getTierColor(player.scout_tier)
 
               return (
-                <Link
+                <motion.div
                   key={player.case_id}
-                  href={`/player/${player.slug}`}
-                  style={{
-                    textDecoration: 'none',
-                    color: 'white',
+                  initial={{ opacity: 0, y: 28 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.45,
+                    delay: index * 0.04,
                   }}
                 >
-                  <article
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-5px)'
-                      e.currentTarget.style.borderColor = '#c6a96b'
-                      e.currentTarget.style.boxShadow =
-                        '0 18px 40px rgba(0,0,0,0.35)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0px)'
-                      e.currentTarget.style.borderColor = '#26314f'
-                      e.currentTarget.style.boxShadow = 'none'
-                    }}
-                    style={{
-                      background: 'rgba(17, 22, 42, 0.92)',
-                      border: '1px solid #26314f',
-                      borderRadius: 24,
-                      padding: 24,
-                      minHeight: 310,
-                      transition: 'all 0.22s ease',
-                      cursor: 'pointer',
-                      height: '100%',
-                    }}
+                  <Link
+                    href={`/player/${player.slug}`}
+                    className="text-white no-underline"
                   >
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                        marginBottom: 22,
-                        gap: 16,
+                    <motion.article
+                      whileHover={{
+                        y: -8,
+                        scale: 1.015,
                       }}
+                      transition={{
+                        type: 'spring',
+                        stiffness: 260,
+                        damping: 18,
+                      }}
+                      className="group flex h-full min-h-[340px] cursor-pointer flex-col rounded-[26px] border border-[#26314f] bg-[linear-gradient(180deg,rgba(17,22,42,0.96),rgba(10,14,26,0.96))] p-6 transition duration-300 hover:border-[#c6a96b] hover:shadow-[0_25px_60px_rgba(198,169,107,0.18)]"
                     >
-                      <div
-                        style={{
-                          width: 58,
-                          height: 58,
-                          borderRadius: 18,
-                          background:
-                            'linear-gradient(135deg, #c6a96b 0%, #6b5a2e 100%)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontWeight: 900,
-                          fontSize: 20,
-                          color: '#0b1020',
-                        }}
-                      >
-                        {getInitials(player.name)}
+                      <div className="mb-5 flex items-start justify-between gap-4">
+                        <div className="flex h-[60px] w-[60px] items-center justify-center rounded-[20px] bg-[linear-gradient(135deg,#c6a96b_0%,#6b5a2e_100%)] text-xl font-black text-[#0b1020] transition group-hover:scale-105">
+                          {getInitials(player.name)}
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-end gap-2">
+                          <span
+                            className="rounded-full px-2.5 py-1.5 text-xs font-black text-[#0b1020]"
+                            style={{ background: tierColor }}
+                          >
+                            {player.scout_tier ?? '-'} TIER
+                          </span>
+
+                          <span
+                            className="rounded-full px-3 py-1.5 text-xs font-extrabold uppercase text-white"
+                            style={{ background: getStatusColor(player.status) }}
+                          >
+                            {player.status ?? 'unknown'}
+                          </span>
+                        </div>
                       </div>
 
-                      <div
-                        style={{
-                          display: 'flex',
-                          gap: 8,
-                          alignItems: 'center',
-                          flexWrap: 'wrap',
-                          justifyContent: 'flex-end',
-                        }}
-                      >
-                        <span
-                          style={{
-                            background: tierColor,
-                            color: '#0b1020',
-                            padding: '6px 10px',
-                            borderRadius: 999,
-                            fontSize: 12,
-                            fontWeight: 900,
-                          }}
-                        >
-                          {player.scout_tier ?? '-'} TIER
+                      <h2 className="mb-2 text-[27px]">{player.name}</h2>
+
+                      <p className="mb-4 font-extrabold text-[#c6a96b]">
+                        현재 소속팀: {player.current_team ?? '-'}
+                      </p>
+
+                      <div className="mb-6 rounded-[18px] border border-[rgba(198,169,107,0.18)] bg-[rgba(198,169,107,0.08)] p-4 transition group-hover:border-[rgba(198,169,107,0.35)]">
+                        <p className="mb-2 text-[13px] font-black text-[#c6a96b]">
+                          한줄 결론
+                        </p>
+
+                        <p className="m-0 text-[15px] leading-7 text-[#f3f4f6]">
+                          {player.conclusion ?? '아직 한줄 결론이 입력되지 않았습니다.'}
+                        </p>
+                      </div>
+
+                      <div className="mb-5">
+                        <div className="mb-2 flex justify-between text-sm text-[#a8b0c2]">
+                          <span>전술 적합도</span>
+                          <strong style={{ color: scoreColor }}>{score}/100</strong>
+                        </div>
+
+                        <div className="h-2.5 overflow-hidden rounded-full border border-[#1f2942] bg-[#0b1020]">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${score}%` }}
+                            transition={{
+                              duration: 0.7,
+                              delay: 0.15 + index * 0.04,
+                            }}
+                            style={{
+                              height: '100%',
+                              borderRadius: 999,
+                              background: scoreColor,
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-auto flex items-center justify-between gap-3 border-t border-[#26314f] pt-4">
+                        <span className="text-[13px] text-[#94a3b8]">
+                          Scout Report 보기
                         </span>
 
-                        <span
-                          style={{
-                            background: getStatusColor(player.status),
-                            color: 'white',
-                            padding: '6px 12px',
-                            borderRadius: 999,
-                            fontSize: 12,
-                            fontWeight: 800,
-                            textTransform: 'uppercase',
-                          }}
-                        >
-                          {player.status ?? 'unknown'}
+                        <span className="rounded-full bg-[#c6a96b] px-3 py-2 text-[13px] font-black text-[#0b1020] transition group-hover:bg-[#d7bd77]">
+                          자세히 보기 →
                         </span>
                       </div>
-                    </div>
-
-                    <h2 style={{ fontSize: 26, marginBottom: 8 }}>
-                      {player.name}
-                    </h2>
-
-                    <p
-                      style={{
-                        color: '#c6a96b',
-                        marginBottom: 14,
-                        fontWeight: 700,
-                      }}
-                    >
-                      현재 소속팀: {player.current_team ?? '-'}
-                    </p>
-
-                    <div
-                      style={{
-                        display: 'flex',
-                        gap: 8,
-                        flexWrap: 'wrap',
-                        marginBottom: 18,
-                      }}
-                    >
-                      <span
-                        style={{
-                          padding: '5px 10px',
-                          borderRadius: 999,
-                          background: '#0b1020',
-                          border: '1px solid #33415f',
-                          color: '#d1d5db',
-                          fontSize: 13,
-                        }}
-                      >
-                        {player.position ?? '-'}
-                      </span>
-
-                      <span
-                        style={{
-                          padding: '5px 10px',
-                          borderRadius: 999,
-                          background: '#0b1020',
-                          border: '1px solid #33415f',
-                          color: '#d1d5db',
-                          fontSize: 13,
-                        }}
-                      >
-                        {player.nationality ?? '-'}
-                      </span>
-                    </div>
-
-                    <div style={{ marginBottom: 18 }}>
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          marginBottom: 8,
-                          color: '#a8b0c2',
-                          fontSize: 14,
-                        }}
-                      >
-                        <span>전술 적합도</span>
-                        <strong
-                          style={{
-                            color:
-                              score >= 80
-                                ? '#4ade80'
-                                : score >= 70
-                                ? '#facc15'
-                                : '#f87171',
-                          }}
-                        >
-                          {score}/100
-                        </strong>
-                      </div>
-
-                      <div
-                        style={{
-                          height: 9,
-                          borderRadius: 999,
-                          background: '#0b1020',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: `${score}%`,
-                            height: '100%',
-                            borderRadius: 999,
-                            background:
-                              score >= 80
-                                ? '#4ade80'
-                                : score >= 70
-                                ? '#facc15'
-                                : '#f87171',
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div style={{ color: '#d1d5db', lineHeight: 1.8 }}>
-                      <p>신뢰도: {player.trust_level ?? '-'}</p>
-                      <p>예상 이적료: {player.fee ?? '-'}</p>
-                    </div>
-                  </article>
-                </Link>
+                    </motion.article>
+                  </Link>
+                </motion.div>
               )
             })}
-          </div>
+          </section>
         )}
 
-        <p style={{ color: '#777', fontSize: 13, marginTop: 36 }}>
-          본 사이트는 팬이 제작한 비공식 분석 플랫폼입니다. Tottenham
-          Hotspur와 공식 제휴된 서비스가 아닙니다.
+        <p className="mt-9 text-[13px] text-[#777]">
+          본 사이트는 팬이 제작한 비공식 분석 플랫폼입니다. Tottenham Hotspur와
+          공식 제휴된 서비스가 아닙니다.
         </p>
       </div>
     </main>

@@ -25,9 +25,25 @@ function getStatusColor(status: string | null) {
 }
 
 function getScoreColor(score: number) {
-  if (score >= 80) return '#4ade80'
+  if (score >= 85) return '#4ade80'
   if (score >= 70) return '#facc15'
   return '#f87171'
+}
+
+function getTierColor(tier: string | null) {
+  if (tier === 'S') return '#facc15'
+  if (tier === 'A') return '#4ade80'
+  if (tier === 'B') return '#60a5fa'
+  if (tier === 'C') return '#f97316'
+  return '#64748b'
+}
+
+function getTierText(tier: string | null) {
+  if (tier === 'S') return '최우선 영입급'
+  if (tier === 'A') return '강력 추천'
+  if (tier === 'B') return '검토 가치 있음'
+  if (tier === 'C') return '리스크 큼'
+  return '평가 대기'
 }
 
 export default async function PlayerPage({
@@ -60,6 +76,8 @@ export default async function PlayerPage({
 
   const score = data.fit_score ?? 0
   const scoreColor = getScoreColor(score)
+  const tierColor = getTierColor(data.scout_tier)
+  const tierText = getTierText(data.scout_tier)
 
   return (
     <main
@@ -71,7 +89,7 @@ export default async function PlayerPage({
         padding: '40px 24px',
       }}
     >
-      <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+      <div style={{ maxWidth: 1120, margin: '0 auto' }}>
         <Link
           href="/"
           style={{
@@ -106,8 +124,8 @@ export default async function PlayerPage({
             <div style={{ display: 'flex', gap: 22, alignItems: 'center' }}>
               <div
                 style={{
-                  width: 86,
-                  height: 86,
+                  width: 88,
+                  height: 88,
                   borderRadius: 26,
                   background:
                     'linear-gradient(135deg, #c6a96b 0%, #6b5a2e 100%)',
@@ -117,27 +135,41 @@ export default async function PlayerPage({
                   fontWeight: 900,
                   fontSize: 28,
                   color: '#0b1020',
-                  boxShadow: '0 18px 40px rgba(0,0,0,0.35)',
                 }}
               >
                 {getInitials(data.name)}
               </div>
 
               <div>
-                <span
-                  style={{
-                    display: 'inline-block',
-                    background: getStatusColor(data.status),
-                    padding: '7px 14px',
-                    borderRadius: 999,
-                    fontSize: 12,
-                    fontWeight: 900,
-                    textTransform: 'uppercase',
-                    marginBottom: 12,
-                  }}
-                >
-                  {data.status ?? 'unknown'}
-                </span>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      background: getStatusColor(data.status),
+                      padding: '7px 14px',
+                      borderRadius: 999,
+                      fontSize: 12,
+                      fontWeight: 900,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {data.status ?? 'unknown'}
+                  </span>
+
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      background: tierColor,
+                      color: '#0b1020',
+                      padding: '7px 14px',
+                      borderRadius: 999,
+                      fontSize: 12,
+                      fontWeight: 900,
+                    }}
+                  >
+                    {data.scout_tier ?? '-'} TIER · {tierText}
+                  </span>
+                </div>
 
                 <h1
                   style={{
@@ -159,14 +191,15 @@ export default async function PlayerPage({
                 >
                   <Badge>{data.position ?? '-'}</Badge>
                   <Badge>{data.nationality ?? '-'}</Badge>
-                  <Badge>{data.team ?? '-'}</Badge>
+                  <Badge>현재 소속팀: {data.current_team ?? '-'}</Badge>
+                  <Badge>나이: {data.age ?? '-'}</Badge>
                 </div>
               </div>
             </div>
 
             <div
               style={{
-                minWidth: 180,
+                minWidth: 190,
                 background: '#0b1020',
                 border: '1px solid #33415f',
                 borderRadius: 22,
@@ -175,11 +208,36 @@ export default async function PlayerPage({
               }}
             >
               <p style={{ color: '#888', marginBottom: 8 }}>전술 적합도</p>
-              <strong style={{ fontSize: 42, color: scoreColor }}>
-                {score}
-              </strong>
+              <strong style={{ fontSize: 44, color: scoreColor }}>{score}</strong>
               <span style={{ color: '#aaa', fontWeight: 700 }}>/100</span>
             </div>
+          </div>
+        </section>
+
+        <section
+          style={{
+            background:
+              'linear-gradient(135deg, rgba(198,169,107,0.16), rgba(17,22,42,0.94))',
+            border: '1px solid rgba(198,169,107,0.3)',
+            borderRadius: 28,
+            padding: 30,
+            marginBottom: 24,
+          }}
+        >
+          <h2 style={{ margin: '0 0 20px', fontSize: 30 }}>Scout Report</h2>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+              gap: 18,
+            }}
+          >
+            <ScoutCard title="한줄 결론" value={data.conclusion ?? '분석 준비중'} />
+            <ScoutCard title="즉시전력감" value={data.ready_now ?? '분석 준비중'} />
+            <ScoutCard title="리스크" value={data.risk_summary ?? '분석 준비중'} />
+            <ScoutCard title="전술 역할" value={data.role_summary ?? '분석 준비중'} />
+            <ScoutCard title="케미 좋은 선수" value={data.chemistry ?? '분석 준비중'} />
           </div>
         </section>
 
@@ -232,6 +290,9 @@ export default async function PlayerPage({
             marginBottom: 24,
           }}
         >
+          <InfoCard title="Scout Tier" value={`${data.scout_tier ?? '-'} · ${tierText}`} />
+          <InfoCard title="현재 소속팀" value={data.current_team ?? '-'} />
+          <InfoCard title="나이" value={data.age ?? '-'} />
           <InfoCard title="신뢰도" value={data.trust_level ?? '-'} />
           <InfoCard title="예상 이적료" value={data.fee ?? '-'} />
           <InfoCard title="출처" value={data.source ?? '-'} />
@@ -301,7 +362,25 @@ function InfoCard({ title, value }: { title: string; value: string | number }) {
       }}
     >
       <p style={{ color: '#888', marginBottom: 10 }}>{title}</p>
-      <h2 style={{ fontSize: 26, margin: 0 }}>{value}</h2>
+      <h2 style={{ fontSize: 24, margin: 0 }}>{value}</h2>
+    </div>
+  )
+}
+
+function ScoutCard({ title, value }: { title: string; value: string }) {
+  return (
+    <div
+      style={{
+        background: 'rgba(11,16,32,0.72)',
+        border: '1px solid rgba(198,169,107,0.18)',
+        borderRadius: 22,
+        padding: 22,
+      }}
+    >
+      <p style={{ color: '#c6a96b', marginBottom: 12, fontWeight: 900 }}>
+        {title}
+      </p>
+      <p style={{ color: '#f3f4f6', lineHeight: 1.7, margin: 0 }}>{value}</p>
     </div>
   )
 }
