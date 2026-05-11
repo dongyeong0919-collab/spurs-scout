@@ -1,6 +1,31 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
 
+  const formattedName = slug
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+
+  return {
+    title: `${formattedName} Scout Report`,
+    description: `${formattedName} 토트넘 이적 분석 및 전술 적합도 리포트`,
+    openGraph: {
+      title: `${formattedName} Scout Report | SPURS SCOUT`,
+      description: `${formattedName} 토트넘 전술 적합도 분석`,
+      url: `https://spurs-scout-bfz2.vercel.app/player/${slug}`,
+      siteName: 'SPURS SCOUT',
+      locale: 'ko_KR',
+      type: 'article',
+    },
+  }
+}
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
