@@ -112,6 +112,7 @@ export default function AdminPage() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [aiLoading, setAiLoading] = useState(false)
 
   const mergedRumors = useMemo<RumorItem[]>(() => {
     const playerMap = new Map(players.map((player) => [player.id, player]))
@@ -292,6 +293,55 @@ export default function AdminPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  async function handleGenerateAIReport() {
+    setAiLoading(true)
+    setError('')
+    setMessage('')
+
+    try {
+      const response = await fetch('/api/scout-summary', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: playerName,
+          position,
+          currentClub,
+          nationality,
+          age,
+          fitScore,
+          scoutTier,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error ?? 'AI 생성 실패')
+        return
+      }
+
+      const report = data.report
+
+      setLinkReason(report.linkReason ?? '')
+      setConclusion(report.conclusion ?? '')
+      setReadyNow(report.readyNow ?? '')
+      setRiskSummary(report.riskSummary ?? '')
+      setRoleSummary(report.roleSummary ?? '')
+      setChemistry(report.chemistry ?? '')
+      setPros((report.pros ?? []).join('\n'))
+      setCons((report.cons ?? []).join('\n'))
+
+      setMessage('AI Scout Report가 모든 칸에 자동 입력되었습니다.')
+    } catch (error) {
+      console.error(error)
+      setError('AI 생성 중 오류 발생')
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -361,7 +411,11 @@ export default function AdminPage() {
         .single()
 
       if (playerInsertError || !playerData) {
-        setError(`선수 저장 실패: ${playerInsertError?.message ?? '선수 정보를 저장하지 못했습니다.'}`)
+        setError(
+          `선수 저장 실패: ${
+            playerInsertError?.message ?? '선수 정보를 저장하지 못했습니다.'
+          }`
+        )
         setLoading(false)
         return
       }
@@ -458,12 +512,24 @@ export default function AdminPage() {
 
           <form onSubmit={handleSubmit} className="grid gap-6">
             <div className="grid gap-4 sm:grid-cols-2">
-              <TextInput label="선수 이름" value={playerName} onChange={(value) => {
-                setPlayerName(value)
-                if (!slug) setSlug(makeSlug(value))
-              }} placeholder="예: Xavi Simons" required />
+              <TextInput
+                label="선수 이름"
+                value={playerName}
+                onChange={(value) => {
+                  setPlayerName(value)
+                  if (!slug) setSlug(makeSlug(value))
+                }}
+                placeholder="예: Xavi Simons"
+                required
+              />
 
-              <TextInput label="slug" value={slug} onChange={setSlug} placeholder="예: xavi-simons" required />
+              <TextInput
+                label="slug"
+                value={slug}
+                onChange={setSlug}
+                placeholder="예: xavi-simons"
+                required
+              />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -489,7 +555,21 @@ export default function AdminPage() {
             <TextInput label="이적료" value={fee} onChange={setFee} placeholder="예: €75m" />
             <TextInput label="출처" value={source} onChange={setSource} placeholder="예: Fabrizio Romano" />
 
-            <TextArea label="링크 이유 / 분석 문장" value={linkReason} onChange={setLinkReason} placeholder="예: 토트넘은 창의적인 공격형 미드필더 보강이 필요하다." />
+            <button
+              type="button"
+              onClick={handleGenerateAIReport}
+              disabled={aiLoading || !playerName}
+              className="inline-flex items-center justify-center rounded-2xl border border-[#c4a35a]/30 bg-[#c4a35a]/10 px-6 py-3 text-sm font-bold text-[#d1c89b] transition hover:bg-[#c4a35a]/20 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {aiLoading ? 'AI 생성중...' : 'AI Scout 초안 생성'}
+            </button>
+
+            <TextArea
+              label="링크 이유 / 분석 문장"
+              value={linkReason}
+              onChange={setLinkReason}
+              placeholder="AI Scout 초안 생성 버튼을 누르면 여기에 분석 문장이 들어갑니다."
+            />
 
             <div className="grid gap-4 sm:grid-cols-2">
               <TextArea label="장점" value={pros} onChange={setPros} placeholder={'한 줄에 하나씩 입력\n예: 드리블 돌파\n예: 전진 패스'} />

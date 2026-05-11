@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     template: '%s | SPURS SCOUT',
   },
   description:
-    '토트넘 팬을 위한 비공식 이적 분석 플랫폼. 이적 루머, 전술 적합도, Scout Tier, 선수 비교 리포트를 제공합니다.',
+    '토트넘 팬을 위한 비공식 이적 분석 플랫폼. 이적 루머, 전술 적합도, Scout Tier, 장단점, 리스크 기반 선수 분석을 제공합니다.',
   keywords: [
     '토트넘',
     'Tottenham',
@@ -27,18 +27,24 @@ export const metadata: Metadata = {
     'SPURS SCOUT',
     '이적시장',
     '축구 이적',
+    '선수 분석',
     '선수 비교',
     '스카우트 리포트',
+    '프리미어리그',
     'EPL',
   ],
   authors: [{ name: 'SPURS SCOUT' }],
   creator: 'SPURS SCOUT',
   publisher: 'SPURS SCOUT',
-  metadataBase: new URL('https://spurs-scout.vercel.app'),
+  metadataBase: new URL('https://spurs-scout-bfz2.vercel.app'),
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     title: 'SPURS SCOUT | 토트넘 이적 분석 플랫폼',
-    description: 'Tottenham Transfer Intelligence Platform',
-    url: 'https://spurs-scout.vercel.app',
+    description:
+      '토트넘 팬들을 위한 비공식 이적 분석 플랫폼. 전술 적합도, Scout Tier, 장단점, 리스크 기반 분석 제공.',
+    url: 'https://spurs-scout-bfz2.vercel.app',
     siteName: 'SPURS SCOUT',
     images: [
       {
@@ -54,13 +60,34 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'SPURS SCOUT | 토트넘 이적 분석 플랫폼',
-    description: 'Tottenham Transfer Intelligence Platform',
+    description:
+      '토트넘 팬들을 위한 비공식 이적 분석 플랫폼. 전술 적합도 기반으로 영입 후보를 분석합니다.',
     images: ['/og-image.png'],
   },
   robots: {
     index: true,
     follow: true,
   },
+}
+
+function NavLink({
+  href,
+  children,
+  prefetch,
+}: {
+  href: string
+  children: React.ReactNode
+  prefetch?: boolean
+}) {
+  return (
+    <Link
+      href={href}
+      prefetch={prefetch}
+      className="rounded-full px-3 py-2 text-sm font-semibold transition hover:bg-[rgba(196,163,90,0.12)] hover:text-[#c4a35a]"
+    >
+      {children}
+    </Link>
+  )
 }
 
 export default function RootLayout({
@@ -78,27 +105,18 @@ export default function RootLayout({
           <div className="mx-auto flex min-h-[64px] max-w-7xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-0">
             <Link
               href="/"
-              className="text-lg font-black tracking-[0.3em] text-[#c4a35a] no-underline"
+              className="text-center text-lg font-black tracking-[0.3em] text-[#c4a35a] no-underline sm:text-left"
             >
               SPURS SCOUT
             </Link>
 
-            <nav className="flex flex-wrap items-center gap-4 text-sm text-white sm:gap-8">
-              <Link href="/" className="transition hover:text-[#c4a35a]">
-                이적 타깃
-              </Link>
-
-              <Link href="/compare" className="transition hover:text-[#c4a35a]">
-                후보 비교
-              </Link>
-
-              <Link href="/privacy" className="transition hover:text-[#c4a35a]">
-                개인정보처리방침
-              </Link>
-
-              <Link href="/admin" className="transition hover:text-[#c4a35a]">
+            <nav className="flex w-full flex-wrap items-center justify-center gap-2 text-white sm:w-auto sm:justify-end sm:gap-3">
+              <NavLink href="/">이적 타깃</NavLink>
+              <NavLink href="/compare">후보 비교</NavLink>
+              <NavLink href="/privacy">개인정보처리방침</NavLink>
+              <NavLink href="/admin" prefetch={false}>
                 관리자
-              </Link>
+              </NavLink>
             </nav>
           </div>
         </header>

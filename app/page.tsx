@@ -56,11 +56,14 @@ function getScoreColor(score: number) {
 
 export default function HomePage() {
   const [targets, setTargets] = useState<Target[]>([])
+  const [favorites, setFavorites] = useState<string[]>([])
+
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('all')
   const [tier, setTier] = useState('all')
   const [position, setPosition] = useState('all')
   const [sort, setSort] = useState('fit')
+  const [favoriteOnly, setFavoriteOnly] = useState(false)
 
   useEffect(() => {
     async function fetchTargets() {
@@ -78,6 +81,27 @@ export default function HomePage() {
 
     fetchTargets()
   }, [])
+
+  useEffect(() => {
+    const saved = localStorage.getItem('spurs-scout-favorites')
+
+    if (saved) {
+      setFavorites(JSON.parse(saved))
+    }
+  }, [])
+
+  function toggleFavorite(slug: string) {
+    let updated: string[]
+
+    if (favorites.includes(slug)) {
+      updated = favorites.filter((item) => item !== slug)
+    } else {
+      updated = [...favorites, slug]
+    }
+
+    setFavorites(updated)
+    localStorage.setItem('spurs-scout-favorites', JSON.stringify(updated))
+  }
 
   const positionOptions = useMemo(() => {
     const unique = new Set(
@@ -114,6 +138,10 @@ export default function HomePage() {
       result = result.filter((player) => player.position === position)
     }
 
+    if (favoriteOnly) {
+      result = result.filter((player) => favorites.includes(player.slug))
+    }
+
     if (sort === 'fit') {
       result.sort((a, b) => (b.fit_score ?? 0) - (a.fit_score ?? 0))
     }
@@ -133,7 +161,7 @@ export default function HomePage() {
     }
 
     return result
-  }, [targets, search, status, tier, position, sort])
+  }, [targets, search, status, tier, position, sort, favoriteOnly, favorites])
 
   function resetFilters() {
     setSearch('')
@@ -141,6 +169,7 @@ export default function HomePage() {
     setTier('all')
     setPosition('all')
     setSort('fit')
+    setFavoriteOnly(false)
   }
 
   return (
@@ -228,11 +257,24 @@ export default function HomePage() {
               <option value="tier">Scout 티어 높은 순</option>
               <option value="name">이름순</option>
             </select>
+
+            <button
+              type="button"
+              onClick={() => setFavoriteOnly(!favoriteOnly)}
+              className={`rounded-2xl border px-4 py-3 font-bold transition ${
+                favoriteOnly
+                  ? 'border-[#c6a96b] bg-[#c6a96b] text-[#0b1020]'
+                  : 'border-[#33415f] bg-[#0b1020] text-white hover:border-[#c6a96b]'
+              }`}
+            >
+              ⭐ 관심 선수
+            </button>
           </div>
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-[#a8b0c2]">
-              전체 {targets.length}명 · 표시 {filteredTargets.length}명
+              전체 {targets.length}명 · 표시 {filteredTargets.length}명 · 관심{' '}
+              {favorites.length}명
             </p>
 
             <button
@@ -259,6 +301,7 @@ export default function HomePage() {
               const score = player.fit_score ?? 0
               const scoreColor = getScoreColor(score)
               const tierColor = getTierColor(player.scout_tier)
+              const isFavorite = favorites.includes(player.slug)
 
               return (
                 <motion.div
@@ -269,7 +312,21 @@ export default function HomePage() {
                     duration: 0.45,
                     delay: index * 0.04,
                   }}
+                  className="relative"
                 >
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.preventDefault()
+                      event.stopPropagation()
+                      toggleFavorite(player.slug)
+                    }}
+                    className="absolute right-4 top-4 z-20 rounded-full border border-[#c6a96b]/30 bg-[#0b1020]/90 px-3 py-2 text-lg shadow-lg transition hover:scale-110 hover:border-[#c6a96b]"
+                    aria-label="관심 선수 저장"
+                  >
+                    {isFavorite ? '⭐' : '☆'}
+                  </button>
+
                   <Link
                     href={`/player/${player.slug}`}
                     className="text-white no-underline"
@@ -286,7 +343,7 @@ export default function HomePage() {
                       }}
                       className="group flex h-full min-h-[340px] cursor-pointer flex-col rounded-[26px] border border-[#26314f] bg-[linear-gradient(180deg,rgba(17,22,42,0.96),rgba(10,14,26,0.96))] p-6 transition duration-300 hover:border-[#c6a96b] hover:shadow-[0_25px_60px_rgba(198,169,107,0.18)]"
                     >
-                      <div className="mb-5 flex items-start justify-between gap-4">
+                      <div className="mb-5 flex items-start justify-between gap-4 pr-12">
                         <div className="flex h-[60px] w-[60px] items-center justify-center rounded-[20px] bg-[linear-gradient(135deg,#c6a96b_0%,#6b5a2e_100%)] text-xl font-black text-[#0b1020] transition group-hover:scale-105">
                           {getInitials(player.name)}
                         </div>

@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 export function middleware(request: NextRequest) {
   const isAdminPage = request.nextUrl.pathname.startsWith('/admin')
@@ -14,7 +13,10 @@ export function middleware(request: NextRequest) {
     const authValue = basicAuth.split(' ')[1]
     const [user, password] = atob(authValue).split(':')
 
-    if (user === 'admin' && password === 'spursscout2026') {
+    if (
+      user === process.env.ADMIN_USERNAME &&
+      password === process.env.ADMIN_PASSWORD
+    ) {
       return NextResponse.next()
     }
   }
