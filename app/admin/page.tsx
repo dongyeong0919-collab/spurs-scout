@@ -20,6 +20,8 @@ interface TransferCase {
   status: string | null
   trust_level: string | null
   source: string | null
+  reliability_tier: string | null
+  rumor_date: string | null
   link_reason: string | null
   fee: string | null
   fit_score: number | null
@@ -45,6 +47,8 @@ interface RumorItem {
   status: string | null
   trustLevel: string | null
   source: string | null
+  reliabilityTier: string | null
+  rumorDate: string | null
   linkReason: string | null
   fee: string | null
   fitScore: number | null
@@ -77,6 +81,11 @@ function listToText(items: string[] | null) {
   return items?.join('\n') ?? ''
 }
 
+function formatRumorDate(value: string | null) {
+  if (!value) return '-'
+  return value.slice(0, 10)
+}
+
 export default function AdminPage() {
   const [playerName, setPlayerName] = useState('')
   const [slug, setSlug] = useState('')
@@ -88,6 +97,8 @@ export default function AdminPage() {
   const [status, setStatus] = useState('talks')
   const [trustLevel, setTrustLevel] = useState('보통')
   const [source, setSource] = useState('')
+  const [reliabilityTier, setReliabilityTier] = useState('Tier 2')
+  const [rumorDate, setRumorDate] = useState('')
   const [linkReason, setLinkReason] = useState('')
   const [fitScore, setFitScore] = useState('')
   const [scoutTier, setScoutTier] = useState('B')
@@ -134,6 +145,8 @@ export default function AdminPage() {
         status: transferCase.status,
         trustLevel: transferCase.trust_level,
         source: transferCase.source,
+        reliabilityTier: transferCase.reliability_tier,
+        rumorDate: transferCase.rumor_date,
         linkReason: transferCase.link_reason,
         fee: transferCase.fee,
         fitScore: transferCase.fit_score,
@@ -162,6 +175,8 @@ export default function AdminPage() {
           rumor.position,
           rumor.currentClub,
           rumor.nationality,
+          rumor.source,
+          rumor.reliabilityTier,
           rumor.conclusion,
         ]
           .join(' ')
@@ -220,7 +235,7 @@ export default function AdminPage() {
     const transferCasesResult = await supabase
       .from('transfer_cases')
       .select(
-        'id, player_id, status, trust_level, source, link_reason, fee, fit_score, scout_tier, pros, cons, conclusion, ready_now, risk_summary, role_summary, chemistry'
+        'id, player_id, status, trust_level, source, reliability_tier, rumor_date, link_reason, fee, fit_score, scout_tier, pros, cons, conclusion, ready_now, risk_summary, role_summary, chemistry'
       )
       .order('id', { ascending: false })
 
@@ -251,6 +266,8 @@ export default function AdminPage() {
     setStatus('talks')
     setTrustLevel('보통')
     setSource('')
+    setReliabilityTier('Tier 2')
+    setRumorDate('')
     setLinkReason('')
     setFitScore('')
     setScoutTier('B')
@@ -279,6 +296,8 @@ export default function AdminPage() {
     setStatus(rumor.status ?? 'talks')
     setTrustLevel(rumor.trustLevel ?? '보통')
     setSource(rumor.source ?? '')
+    setReliabilityTier(rumor.reliabilityTier ?? 'Tier 2')
+    setRumorDate(rumor.rumorDate?.slice(0, 10) ?? '')
     setLinkReason(rumor.linkReason ?? '')
     setFitScore(rumor.fitScore !== null ? String(rumor.fitScore) : '')
     setScoutTier(rumor.scoutTier ?? 'B')
@@ -318,7 +337,7 @@ export default function AdminPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.error ?? 'AI 생성 실패')
+        setError(data.error ?? 'AI Scout 기능은 현재 준비 중입니다.')
         return
       }
 
@@ -366,6 +385,8 @@ export default function AdminPage() {
       status,
       trust_level: trustLevel,
       source: source.trim() || null,
+      reliability_tier: reliabilityTier,
+      rumor_date: rumorDate || null,
       link_reason: linkReason.trim() || null,
       fee: fee.trim() || null,
       fit_score: fitScore ? Number(fitScore) : null,
@@ -420,12 +441,14 @@ export default function AdminPage() {
         return
       }
 
-      const { error: caseInsertError } = await supabase.from('transfer_cases').insert([
-        {
-          ...casePayload,
-          player_id: playerData.id,
-        },
-      ])
+      const { error: caseInsertError } = await supabase
+        .from('transfer_cases')
+        .insert([
+          {
+            ...casePayload,
+            player_id: playerData.id,
+          },
+        ])
 
       if (caseInsertError) {
         setError(`이적 케이스 저장 실패: ${caseInsertError.message}`)
@@ -533,27 +556,99 @@ export default function AdminPage() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <TextInput label="포지션" value={position} onChange={setPosition} placeholder="예: AMF" required />
-              <TextInput label="현재 소속팀" value={currentClub} onChange={setCurrentClub} placeholder="예: RB Leipzig" required />
+              <TextInput
+                label="포지션"
+                value={position}
+                onChange={setPosition}
+                placeholder="예: AMF"
+                required
+              />
+              <TextInput
+                label="현재 소속팀"
+                value={currentClub}
+                onChange={setCurrentClub}
+                placeholder="예: RB Leipzig"
+                required
+              />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <TextInput label="국적" value={nationality} onChange={setNationality} placeholder="예: Netherlands" required />
-              <TextInput label="나이" value={age} onChange={setAge} placeholder="예: 23" type="number" />
+              <TextInput
+                label="국적"
+                value={nationality}
+                onChange={setNationality}
+                placeholder="예: Netherlands"
+                required
+              />
+              <TextInput
+                label="나이"
+                value={age}
+                onChange={setAge}
+                placeholder="예: 23"
+                type="number"
+              />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <SelectInput label="상태" value={status} onChange={setStatus} options={['talks', 'interest', 'linked', 'official']} />
-              <SelectInput label="Scout Tier" value={scoutTier} onChange={setScoutTier} options={['S', 'A', 'B', 'C', 'D']} />
+              <SelectInput
+                label="상태"
+                value={status}
+                onChange={setStatus}
+                options={['talks', 'interest', 'linked', 'official']}
+              />
+              <SelectInput
+                label="Scout Tier"
+                value={scoutTier}
+                onChange={setScoutTier}
+                options={['S', 'A', 'B', 'C', 'D']}
+              />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <SelectInput label="신뢰도" value={trustLevel} onChange={setTrustLevel} options={['높음', '보통', '낮음']} />
-              <TextInput label="적합도 점수" value={fitScore} onChange={setFitScore} placeholder="0-100" type="number" />
+              <SelectInput
+                label="신뢰도"
+                value={trustLevel}
+                onChange={setTrustLevel}
+                options={['높음', '보통', '낮음']}
+              />
+              <TextInput
+                label="적합도 점수"
+                value={fitScore}
+                onChange={setFitScore}
+                placeholder="0-100"
+                type="number"
+              />
             </div>
 
-            <TextInput label="이적료" value={fee} onChange={setFee} placeholder="예: €75m" />
-            <TextInput label="출처" value={source} onChange={setSource} placeholder="예: Fabrizio Romano" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <TextInput
+                label="이적료"
+                value={fee}
+                onChange={setFee}
+                placeholder="예: €75m"
+              />
+              <TextInput
+                label="출처"
+                value={source}
+                onChange={setSource}
+                placeholder="예: Fabrizio Romano"
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <SelectInput
+                label="기자 Tier"
+                value={reliabilityTier}
+                onChange={setReliabilityTier}
+                options={['Tier 1', 'Tier 2', 'Tier 3', 'Tier 4']}
+              />
+              <TextInput
+                label="루머 날짜"
+                value={rumorDate}
+                onChange={setRumorDate}
+                type="date"
+              />
+            </div>
 
             <button
               type="button"
@@ -561,7 +656,7 @@ export default function AdminPage() {
               disabled={aiLoading || !playerName}
               className="inline-flex items-center justify-center rounded-2xl border border-[#c4a35a]/30 bg-[#c4a35a]/10 px-6 py-3 text-sm font-bold text-[#d1c89b] transition hover:bg-[#c4a35a]/20 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {aiLoading ? 'AI 생성중...' : 'AI Scout 초안 생성'}
+              {aiLoading ? 'AI 생성중...' : 'AI Scout 초안 생성 (준비 중)'}
             </button>
 
             <TextArea
@@ -572,21 +667,56 @@ export default function AdminPage() {
             />
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <TextArea label="장점" value={pros} onChange={setPros} placeholder={'한 줄에 하나씩 입력\n예: 드리블 돌파\n예: 전진 패스'} />
-              <TextArea label="단점" value={cons} onChange={setCons} placeholder={'한 줄에 하나씩 입력\n예: 높은 이적료\n예: 수비 집중력 기복'} />
+              <TextArea
+                label="장점"
+                value={pros}
+                onChange={setPros}
+                placeholder={'한 줄에 하나씩 입력\n예: 드리블 돌파\n예: 전진 패스'}
+              />
+              <TextArea
+                label="단점"
+                value={cons}
+                onChange={setCons}
+                placeholder={'한 줄에 하나씩 입력\n예: 높은 이적료\n예: 수비 집중력 기복'}
+              />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <TextArea label="한줄 결론" value={conclusion} onChange={setConclusion} placeholder="예: 포스테코글루 전술에 가장 잘 어울리는 창의형 공격 자원" />
-              <TextArea label="즉시전력감" value={readyNow} onChange={setReadyNow} placeholder="예: 매우 높음. 즉시 선발 경쟁 가능" />
+              <TextArea
+                label="한줄 결론"
+                value={conclusion}
+                onChange={setConclusion}
+                placeholder="예: 포스테코글루 전술에 가장 잘 어울리는 창의형 공격 자원"
+              />
+              <TextArea
+                label="즉시전력감"
+                value={readyNow}
+                onChange={setReadyNow}
+                placeholder="예: 매우 높음. 즉시 선발 경쟁 가능"
+              />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <TextArea label="리스크" value={riskSummary} onChange={setRiskSummary} placeholder="예: 높은 이적료와 빅클럽 경쟁 가능성이 변수" />
-              <TextArea label="전술 역할" value={roleSummary} onChange={setRoleSummary} placeholder="예: 하프스페이스 전개, 2선 침투" />
+              <TextArea
+                label="리스크"
+                value={riskSummary}
+                onChange={setRiskSummary}
+                placeholder="예: 높은 이적료와 빅클럽 경쟁 가능성이 변수"
+              />
+              <TextArea
+                label="전술 역할"
+                value={roleSummary}
+                onChange={setRoleSummary}
+                placeholder="예: 하프스페이스 전개, 2선 침투"
+              />
             </div>
 
-            <TextInput label="케미 좋은 선수" value={chemistry} onChange={setChemistry} placeholder="예: 손흥민, 매디슨, 우도기" />
+            <TextInput
+              label="케미 좋은 선수"
+              value={chemistry}
+              onChange={setChemistry}
+              placeholder="예: 손흥민, 매디슨, 우도기"
+            />
 
             <button
               type="submit"
@@ -613,7 +743,7 @@ export default function AdminPage() {
             <input
               value={adminSearch}
               onChange={(event) => setAdminSearch(event.target.value)}
-              placeholder="선수명, 포지션, 팀 검색"
+              placeholder="선수명, 포지션, 팀, 출처 검색"
               className="rounded-2xl border border-[#c4a35a]/30 bg-[#141a2f] px-4 py-3 text-white outline-none focus:border-[#c4a35a]"
             />
 
@@ -665,12 +795,16 @@ export default function AdminPage() {
                 >
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                      <p className="text-xl font-semibold text-[#c4a35a]">{rumor.playerName}</p>
+                      <p className="text-xl font-semibold text-[#c4a35a]">
+                        {rumor.playerName}
+                      </p>
                       <p className="mt-2 text-sm text-[#d1c89b]">
-                        {rumor.position ?? '-'} · {rumor.nationality ?? '-'} · {rumor.age ?? '-'}세
+                        {rumor.position ?? '-'} · {rumor.nationality ?? '-'} ·{' '}
+                        {rumor.age ?? '-'}세
                       </p>
                       <p className="mt-1 text-sm text-[#d1c89b]">
-                        현재 소속팀: {rumor.currentClub ?? '-'} / slug: {rumor.slug ?? '-'}
+                        현재 소속팀: {rumor.currentClub ?? '-'} / slug:{' '}
+                        {rumor.slug ?? '-'}
                       </p>
                       <p className="mt-3 line-clamp-2 text-sm leading-6 text-[#a8b0c2]">
                         {rumor.conclusion ?? '한줄 결론 없음'}
@@ -682,6 +816,9 @@ export default function AdminPage() {
                       <Badge>Tier: {rumor.scoutTier ?? '-'}</Badge>
                       <Badge>적합도: {rumor.fitScore ?? '-'}</Badge>
                       <Badge>신뢰도: {rumor.trustLevel ?? '-'}</Badge>
+                      <Badge>출처: {rumor.source ?? '-'}</Badge>
+                      <Badge>기자 Tier: {rumor.reliabilityTier ?? '-'}</Badge>
+                      <Badge>루머 날짜: {formatRumorDate(rumor.rumorDate)}</Badge>
                     </div>
                   </div>
 
