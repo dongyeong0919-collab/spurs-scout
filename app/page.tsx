@@ -20,6 +20,9 @@ type Target = {
   scout_tier: string | null
   conclusion: string | null
   position: string | null
+  source: string | null
+  reliability_tier: string | null
+  rumor_date: string | null
 }
 
 function getInitials(name: string) {
@@ -52,6 +55,11 @@ function getScoreColor(score: number) {
   if (score >= 85) return '#4ade80'
   if (score >= 70) return '#facc15'
   return '#f87171'
+}
+
+function formatRumorDate(value: string | null) {
+  if (!value) return '-'
+  return value.slice(0, 10)
 }
 
 export default function HomePage() {
@@ -119,7 +127,14 @@ export default function HomePage() {
     if (search.trim()) {
       const keyword = search.toLowerCase()
       result = result.filter((player) =>
-        [player.name, player.current_team, player.conclusion, player.position]
+        [
+          player.name,
+          player.current_team,
+          player.conclusion,
+          player.position,
+          player.source,
+          player.reliability_tier,
+        ]
           .join(' ')
           .toLowerCase()
           .includes(keyword)
@@ -205,7 +220,7 @@ export default function HomePage() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="선수 이름 / 팀 검색"
+              placeholder="선수 이름 / 팀 / 출처 검색"
               className="rounded-2xl border border-[#33415f] bg-[#0b1020] px-4 py-3 text-white outline-none transition focus:border-[#c6a96b] md:col-span-2"
             />
 
@@ -341,7 +356,7 @@ export default function HomePage() {
                         stiffness: 260,
                         damping: 18,
                       }}
-                      className="group flex h-full min-h-[340px] cursor-pointer flex-col rounded-[26px] border border-[#26314f] bg-[linear-gradient(180deg,rgba(17,22,42,0.96),rgba(10,14,26,0.96))] p-6 transition duration-300 hover:border-[#c6a96b] hover:shadow-[0_25px_60px_rgba(198,169,107,0.18)]"
+                      className="group flex h-full min-h-[390px] cursor-pointer flex-col rounded-[26px] border border-[#26314f] bg-[linear-gradient(180deg,rgba(17,22,42,0.96),rgba(10,14,26,0.96))] p-6 transition duration-300 hover:border-[#c6a96b] hover:shadow-[0_25px_60px_rgba(198,169,107,0.18)]"
                     >
                       <div className="mb-5 flex items-start justify-between gap-4 pr-12">
                         <div className="flex h-[60px] w-[60px] items-center justify-center rounded-[20px] bg-[linear-gradient(135deg,#c6a96b_0%,#6b5a2e_100%)] text-xl font-black text-[#0b1020] transition group-hover:scale-105">
@@ -370,6 +385,17 @@ export default function HomePage() {
                       <p className="mb-4 font-extrabold text-[#c6a96b]">
                         현재 소속팀: {player.current_team ?? '-'}
                       </p>
+
+                      <div className="mb-5 grid gap-2 rounded-[18px] border border-[rgba(198,169,107,0.18)] bg-[rgba(198,169,107,0.06)] p-4">
+                        <div className="flex flex-wrap gap-2">
+                          <InfoPill>출처: {player.source ?? '-'}</InfoPill>
+                          <InfoPill>{player.reliability_tier ?? '-'}</InfoPill>
+                        </div>
+
+                        <p className="text-[13px] font-semibold text-[#94a3b8]">
+                          루머 날짜: {formatRumorDate(player.rumor_date)}
+                        </p>
+                      </div>
 
                       <div className="mb-6 rounded-[18px] border border-[rgba(198,169,107,0.18)] bg-[rgba(198,169,107,0.08)] p-4 transition group-hover:border-[rgba(198,169,107,0.35)]">
                         <p className="mb-2 text-[13px] font-black text-[#c6a96b]">
@@ -427,5 +453,13 @@ export default function HomePage() {
         </p>
       </div>
     </main>
+  )
+}
+
+function InfoPill({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="rounded-full border border-[#c6a96b]/25 bg-[#111827] px-3 py-1.5 text-[12px] font-bold text-[#d7bd77]">
+      {children}
+    </span>
   )
 }

@@ -7,6 +7,50 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
+type PlayerDetail = {
+  name: string | null
+  slug: string | null
+  nationality: string | null
+  position: string | null
+  current_team: string | null
+  age: number | null
+  status: string | null
+  trust_level: string | null
+  source: string | null
+  reliability_tier: string | null
+  rumor_date: string | null
+  link_reason: string | null
+  fee: string | null
+  fit_score: number | null
+  scout_tier: string | null
+  pros: string[] | string | null
+  cons: string[] | string | null
+  conclusion: string | null
+  ready_now: string | null
+  risk_summary: string | null
+  role_summary: string | null
+  chemistry: string | null
+  summary?: string | null
+  strengths?: string | null
+  risks?: string | null
+}
+
+function formatRumorDate(value: string | null) {
+  if (!value) return '-'
+  return value.slice(0, 10)
+}
+
+function formatList(value: string[] | string | null | undefined) {
+  if (!value) return '데이터 준비 중'
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) return '데이터 준비 중'
+    return value.join('\n')
+  }
+
+  return value
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -73,7 +117,7 @@ export default async function PlayerDetailPage({
     .from('transfer_targets_view')
     .select('*')
     .eq('slug', slug)
-    .single()
+    .single<PlayerDetail>()
 
   if (!player) {
     return (
@@ -82,6 +126,14 @@ export default async function PlayerDetailPage({
       </main>
     )
   }
+
+  const conclusion =
+    player.conclusion ??
+    player.summary ??
+    '토트넘 전술 시스템에 적합한 잠재력을 가진 선수.'
+
+  const strengths = formatList(player.pros ?? player.strengths)
+  const risks = player.risk_summary ?? formatList(player.cons ?? player.risks)
 
   return (
     <main className="min-h-screen bg-[#0a0e1a] px-4 py-10 text-white">
@@ -93,16 +145,25 @@ export default async function PlayerDetailPage({
           ← 이적 타깃으로 돌아가기
         </Link>
 
-        <div className="rounded-3xl border border-[rgba(196,163,90,0.2)] bg-[#11162a] p-8 shadow-2xl">
-          <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="rounded-3xl border border-[rgba(196,163,90,0.2)] bg-[#11162a] p-6 shadow-2xl sm:p-8">
+          <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-4xl font-black tracking-tight">
+              <h1 className="text-4xl font-black tracking-tight sm:text-5xl">
                 {player.name}
               </h1>
 
-              <p className="mt-2 text-lg text-gray-300">
+              <p className="mt-3 text-lg text-gray-300">
                 {player.position} · {player.current_team}
               </p>
+
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Badge>상태: {player.status ?? '-'}</Badge>
+                <Badge>Scout Tier: {player.scout_tier ?? '-'}</Badge>
+                <Badge>신뢰도: {player.trust_level ?? '-'}</Badge>
+                <Badge>출처: {player.source ?? '-'}</Badge>
+                <Badge>기자 Tier: {player.reliability_tier ?? '-'}</Badge>
+                <Badge>루머 날짜: {formatRumorDate(player.rumor_date)}</Badge>
+              </div>
             </div>
 
             <div className="rounded-2xl bg-[#c4a35a] px-6 py-4 text-center text-black">
@@ -115,52 +176,93 @@ export default async function PlayerDetailPage({
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
-            <div className="rounded-2xl bg-[#0f1324] p-6">
-              <h2 className="mb-3 text-xl font-bold text-[#c4a35a]">
-                기본 정보
-              </h2>
-
+            <InfoCard title="기본 정보">
               <div className="space-y-2 text-gray-300">
-                <p>국적: {player.nationality}</p>
-                <p>나이: {player.age}</p>
-                <p>Scout Tier: {player.scout_tier}</p>
-                <p>현재 팀: {player.current_team}</p>
+                <p>국적: {player.nationality ?? '-'}</p>
+                <p>나이: {player.age ?? '-'}</p>
+                <p>Scout Tier: {player.scout_tier ?? '-'}</p>
+                <p>현재 팀: {player.current_team ?? '-'}</p>
+                <p>예상 이적료: {player.fee ?? '-'}</p>
               </div>
-            </div>
+            </InfoCard>
 
-            <div className="rounded-2xl bg-[#0f1324] p-6">
-              <h2 className="mb-3 text-xl font-bold text-[#c4a35a]">
-                한줄 결론
-              </h2>
+            <InfoCard title="루머 출처">
+              <div className="space-y-2 text-gray-300">
+                <p>출처: {player.source ?? '-'}</p>
+                <p>기자 Tier: {player.reliability_tier ?? '-'}</p>
+                <p>루머 날짜: {formatRumorDate(player.rumor_date)}</p>
+                <p>현재 상태: {player.status ?? '-'}</p>
+                <p>신뢰도: {player.trust_level ?? '-'}</p>
+              </div>
+            </InfoCard>
 
+            <InfoCard title="한줄 결론">
+              <p className="leading-7 text-gray-300">{conclusion}</p>
+            </InfoCard>
+
+            <InfoCard title="링크 이유">
               <p className="leading-7 text-gray-300">
-                {player.summary ??
-                  '토트넘 전술 시스템에 적합한 잠재력을 가진 선수.'}
+                {player.link_reason ?? '데이터 준비 중'}
               </p>
-            </div>
+            </InfoCard>
 
-            <div className="rounded-2xl bg-[#0f1324] p-6">
-              <h2 className="mb-3 text-xl font-bold text-[#c4a35a]">
-                장점
-              </h2>
-
+            <InfoCard title="장점">
               <p className="whitespace-pre-line leading-7 text-gray-300">
-                {player.strengths ?? '데이터 준비 중'}
+                {strengths}
               </p>
-            </div>
+            </InfoCard>
 
-            <div className="rounded-2xl bg-[#0f1324] p-6">
-              <h2 className="mb-3 text-xl font-bold text-[#c4a35a]">
-                리스크
-              </h2>
-
+            <InfoCard title="리스크">
               <p className="whitespace-pre-line leading-7 text-gray-300">
-                {player.risks ?? '데이터 준비 중'}
+                {risks}
               </p>
+            </InfoCard>
+
+            <InfoCard title="즉시전력감">
+              <p className="leading-7 text-gray-300">
+                {player.ready_now ?? '데이터 준비 중'}
+              </p>
+            </InfoCard>
+
+            <InfoCard title="전술 역할">
+              <p className="leading-7 text-gray-300">
+                {player.role_summary ?? '데이터 준비 중'}
+              </p>
+            </InfoCard>
+
+            <div className="md:col-span-2">
+              <InfoCard title="케미 좋은 선수">
+                <p className="leading-7 text-gray-300">
+                  {player.chemistry ?? '데이터 준비 중'}
+                </p>
+              </InfoCard>
             </div>
           </div>
         </div>
       </div>
     </main>
+  )
+}
+
+function InfoCard({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="rounded-2xl bg-[#0f1324] p-6">
+      <h2 className="mb-3 text-xl font-bold text-[#c4a35a]">{title}</h2>
+      {children}
+    </div>
+  )
+}
+
+function Badge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="rounded-full border border-[#c4a35a]/25 bg-[#15203f] px-3 py-1 text-sm text-[#d1c89b]">
+      {children}
+    </span>
   )
 }
