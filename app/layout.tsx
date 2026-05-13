@@ -6,10 +6,6 @@ export const metadata: Metadata = {
   description:
     '토트넘 이적시장 분석 플랫폼. 전술 적합도, Scout Tier, 이적 루머 분석 제공.',
 
-  verification: {
-    google: 'I7tbgkk_-qajKWJQ',
-  },
-
   openGraph: {
     title: 'SPURS SCOUT',
     description:
@@ -44,6 +40,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
+      <head>
+        <meta
+          name="google-site-verification"
+          content="I7tbgkk_-qajKWJQ"
+        />
+      </head>
+
       <body>{children}</body>
     </html>
   )
