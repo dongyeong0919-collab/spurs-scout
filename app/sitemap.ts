@@ -1,7 +1,15 @@
-import { MetadataRoute } from 'next'
+import type { MetadataRoute } from 'next'
+import { posts } from './blog/posts'
+
+const baseUrl = 'https://spurs-scout-bfz2.vercel.app'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://spurs-scout-bfz2.vercel.app'
+  const blogUrls = posts.map((post) => ({
+    url: `${baseUrl}/blog/${post.slug}`,
+    lastModified: new Date(post.date),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }))
 
   return [
     {
@@ -10,17 +18,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'daily',
       priority: 1,
     },
+
     {
       url: `${baseUrl}/compare`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
-      priority: 0.8,
+      priority: 0.7,
     },
+
     {
-      url: `${baseUrl}/privacy`,
+      url: `${baseUrl}/blog`,
       lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.3,
+      changeFrequency: 'weekly',
+      priority: 0.9,
     },
+
+    ...blogUrls,
   ]
 }

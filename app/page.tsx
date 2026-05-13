@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import { posts } from './blog/posts'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -63,6 +64,8 @@ function formatRumorDate(value: string | null) {
 }
 
 export default function HomePage() {
+  const latestPosts = posts.slice(0, 2)
+
   const [targets, setTargets] = useState<Target[]>([])
   const [favorites, setFavorites] = useState<string[]>([])
 
@@ -126,6 +129,7 @@ export default function HomePage() {
 
     if (search.trim()) {
       const keyword = search.toLowerCase()
+
       result = result.filter((player) =>
         [
           player.name,
@@ -208,6 +212,22 @@ export default function HomePage() {
             Tottenham 팬들을 위한 비공식 이적 분석 플랫폼입니다. 루머를 단순히
             모으는 것이 아니라, 전술 적합도와 Scout Tier로 영입 가치를 판단합니다.
           </p>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href="/compare"
+              className="rounded-2xl bg-[#c6a96b] px-5 py-3 font-black text-[#0b1020] no-underline transition hover:opacity-90"
+            >
+              후보 비교하기 →
+            </Link>
+
+            <Link
+              href="/blog"
+              className="rounded-2xl border border-[#c6a96b]/40 px-5 py-3 font-black text-[#c6a96b] no-underline transition hover:bg-[#c6a96b]/10"
+            >
+              블로그 보기 →
+            </Link>
+          </div>
         </motion.section>
 
         <motion.section
@@ -323,10 +343,7 @@ export default function HomePage() {
                   key={player.case_id}
                   initial={{ opacity: 0, y: 28 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.45,
-                    delay: index * 0.04,
-                  }}
+                  transition={{ duration: 0.45, delay: index * 0.04 }}
                   className="relative"
                 >
                   <button
@@ -347,10 +364,7 @@ export default function HomePage() {
                     className="text-white no-underline"
                   >
                     <motion.article
-                      whileHover={{
-                        y: -8,
-                        scale: 1.015,
-                      }}
+                      whileHover={{ y: -8, scale: 1.015 }}
                       transition={{
                         type: 'spring',
                         stiffness: 260,
@@ -403,7 +417,8 @@ export default function HomePage() {
                         </p>
 
                         <p className="m-0 text-[15px] leading-7 text-[#f3f4f6]">
-                          {player.conclusion ?? '아직 한줄 결론이 입력되지 않았습니다.'}
+                          {player.conclusion ??
+                            '아직 한줄 결론이 입력되지 않았습니다.'}
                         </p>
                       </div>
 
@@ -446,6 +461,69 @@ export default function HomePage() {
             })}
           </section>
         )}
+
+        <section className="mt-16">
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <div>
+              <p className="mb-2 text-sm font-black tracking-[3px] text-[#c4a35a]">
+                SPURS SCOUT BLOG
+              </p>
+
+              <h2 className="text-3xl font-black text-white">최신 분석 글</h2>
+            </div>
+
+            <Link
+              href="/blog"
+              className="text-sm font-bold text-[#c4a35a] hover:underline"
+            >
+              전체 보기 →
+            </Link>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {latestPosts.map((post) => (
+              <Link
+                key={post.slug}
+                href={`/blog/${post.slug}`}
+                className="rounded-3xl border border-[#26314f] bg-[#11162a] p-6 no-underline transition hover:border-[#c4a35a]"
+              >
+                <p className="mb-3 text-sm font-bold text-[#c4a35a]">
+                  {post.category}
+                </p>
+
+                <h3 className="mb-3 text-2xl font-black text-white">
+                  {post.title}
+                </h3>
+
+                <p className="mb-4 leading-7 text-[#a8b0c2]">{post.excerpt}</p>
+
+                <p className="text-sm text-[#777]">{post.date}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-16 rounded-3xl border border-[#26314f] bg-[#11162a] p-8">
+          <p className="mb-2 text-sm font-black tracking-[3px] text-[#c4a35a]">
+            PLAYER COMPARISON
+          </p>
+
+          <h2 className="mb-4 text-3xl font-black text-white">
+            이적 후보 비교 분석
+          </h2>
+
+          <p className="mb-6 max-w-3xl leading-8 text-[#a8b0c2]">
+            토트넘 이적 후보들을 전술 적합도, Scout Tier, 장점과 리스크
+            기준으로 비교 분석합니다.
+          </p>
+
+          <Link
+            href="/compare"
+            className="inline-flex rounded-2xl bg-[#c4a35a] px-6 py-3 font-black text-black no-underline transition hover:opacity-90"
+          >
+            Compare 페이지 이동 →
+          </Link>
+        </section>
 
         <p className="mt-9 text-[13px] text-[#777]">
           본 사이트는 팬이 제작한 비공식 분석 플랫폼입니다. Tottenham Hotspur와
