@@ -135,8 +135,44 @@ export default async function PlayerDetailPage({
   const strengths = formatList(player.pros ?? player.strengths)
   const risks = player.risk_summary ?? formatList(player.cons ?? player.risks)
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: `${player.name} Scout Report`,
+    description: conclusion,
+    author: {
+      '@type': 'Organization',
+      name: 'SPURS SCOUT',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'SPURS SCOUT',
+    },
+    mainEntityOfPage: `https://spurs-scout-bfz2.vercel.app/player/${player.slug}`,
+    about: {
+      '@type': 'Person',
+      name: player.name,
+      nationality: player.nationality,
+      roleName: player.position,
+    },
+    keywords: [
+      'Tottenham transfer',
+      'Spurs Scout',
+      player.name,
+      player.current_team,
+      player.position,
+    ].filter(Boolean),
+  }
+
   return (
     <main className="min-h-screen bg-[#0a0e1a] px-4 py-10 text-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd),
+        }}
+      />
+
       <div className="mx-auto max-w-5xl">
         <Link
           href="/"
@@ -169,9 +205,7 @@ export default async function PlayerDetailPage({
             <div className="rounded-2xl bg-[#c4a35a] px-6 py-4 text-center text-black">
               <p className="text-sm font-bold">전술 적합도</p>
 
-              <p className="text-3xl font-black">
-                {player.fit_score ?? '-'}
-              </p>
+              <p className="text-3xl font-black">{player.fit_score ?? '-'}</p>
             </div>
           </div>
 
