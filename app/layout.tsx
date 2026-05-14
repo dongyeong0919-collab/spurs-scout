@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     '토트넘 이적시장 분석 플랫폼. 전술 적합도, Scout Tier, 이적 루머 분석 제공.',
 
   verification: {
-    google: 'I7tbgkk_-qajKWJQ',
+    google: 'l7tbgkk_-qajKWJQCgTymDxVwtrmpleDfCVjyCwmPow',
   },
 
   openGraph: {
