@@ -1,6 +1,7 @@
 export type BlogPost = {
   slug: string
   title: string
+  description?: string
   excerpt: string
   date: string
   category: string
