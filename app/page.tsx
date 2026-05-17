@@ -41,6 +41,17 @@ function getInitials(name: string) {
     .toUpperCase()
 }
 
+function getTeamInitials(team: string | null) {
+  if (!team) return '-'
+
+  return team
+    .split(' ')
+    .map((word) => word[0])
+    .join('')
+    .slice(0, 3)
+    .toUpperCase()
+}
+
 function getStatusColor(status: string | null) {
   if (status === 'talks') return '#f59e0b'
   if (status === 'interest') return '#2563eb'
@@ -162,8 +173,6 @@ export default function HomePage() {
 
     return result
   }, [targets, search, status, tier, position, sort, favoriteOnly, favorites])
-
-  const topTarget = filteredTargets[0]
 
   function resetFilters() {
     setSearch('')
@@ -295,56 +304,53 @@ export default function HomePage() {
           </div>
         </section>
 
-        {activeTab === 'home' && (
-          <section className="px-5 pt-6">
-            <div className="rounded-[28px] border border-[#26314f] bg-[#0b1020] p-6">
-              <p className="mb-2 text-xs font-black tracking-[2px] text-[#c6a96b]">
-                WELCOME
-              </p>
-
-              <h2 className="text-2xl font-black text-white">
-                토트넘 이적시장 분석 홈
-              </h2>
-
-              <p className="mt-3 leading-7 text-[#a8b0c2]">
-                상단 메뉴에서 이적시장, 비교, 뉴스를 선택해 Spurs Scout 분석을 확인하세요.
-              </p>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab('transfer')}
-                className="mt-5 rounded-2xl bg-[#c6a96b] px-5 py-3 font-black text-[#0b1020]"
-              >
-                이적시장 보러가기 →
-              </button>
-            </div>
-
-            {topTarget && (
-              <div className="mt-5 rounded-[28px] border border-[#26314f] bg-[#0b1020] p-6">
-                <p className="mb-2 text-xs font-black tracking-[2px] text-[#c6a96b]">
-                  FEATURED TARGET
-                </p>
-
-                <h3 className="text-2xl font-black">{topTarget.name}</h3>
-
-                <p className="mt-2 text-sm text-[#a8b0c2]">
-                  {topTarget.position ?? '-'} · {topTarget.current_team ?? '-'}
-                </p>
-
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  <MiniStat label="적합도" value={`${topTarget.fit_score ?? 0}/100`} />
-                  <MiniStat
-                    label="이적 가능성"
-                    value={`${topTarget.transfer_probability ?? 0}%`}
-                  />
-                </div>
-              </div>
-            )}
-          </section>
-        )}
+        {activeTab === 'home' && null}
 
         {activeTab === 'transfer' && (
           <>
+            <section className="px-5 pt-6">
+              <div className="rounded-[26px] border border-[#26314f] bg-[#0b1020] p-5">
+                <div className="mb-5 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-black tracking-[2px] text-[#c6a96b]">
+                      LIVE TRANSFER FEED
+                    </p>
+
+                    <h2 className="mt-1 text-2xl font-black text-white">
+                      최근 업데이트
+                    </h2>
+                  </div>
+
+                  <span className="rounded-full border border-[#22c55e]/40 bg-[#052e16] px-3 py-1 text-xs font-black text-[#86efac]">
+                    LIVE
+                  </span>
+                </div>
+
+                <div className="grid gap-3 lg:grid-cols-3">
+                  <UpdateItem
+                    player="Eberechi Eze"
+                    tag="Probability"
+                    text="이적 가능성이 68%로 업데이트되었습니다."
+                    time="방금 전"
+                  />
+
+                  <UpdateItem
+                    player="Marc Guehi"
+                    tag="Source"
+                    text="BBC Sport 기반 루머 출처가 반영되었습니다."
+                    time="12분 전"
+                  />
+
+                  <UpdateItem
+                    player="Pedro Neto"
+                    tag="Status"
+                    text="윙어 보강 후보로 talks 상태를 유지 중입니다."
+                    time="오늘"
+                  />
+                </div>
+              </div>
+            </section>
+
             <section className="px-5 pt-6">
               <div className="rounded-[26px] border border-[#26314f] bg-[#0b1020] p-4">
                 <input
@@ -429,41 +435,6 @@ export default function HomePage() {
               </div>
             </section>
 
-            {topTarget && (
-              <section className="px-5 pt-6">
-                <p className="mb-3 text-sm font-black tracking-[2px] text-[#c6a96b]">
-                  TOP TARGET
-                </p>
-
-                <Link href={`/player/${topTarget.slug}`} className="no-underline">
-                  <div className="rounded-[28px] border border-[#c6a96b]/30 bg-[linear-gradient(135deg,#1d2745,#101525)] p-5 text-white">
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#c6a96b] text-xl font-black text-[#0b1020]">
-                        {getInitials(topTarget.name)}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <h2 className="truncate text-2xl font-black">
-                          {topTarget.name}
-                        </h2>
-                        <p className="text-sm text-[#a8b0c2]">
-                          {topTarget.position ?? '-'} · {topTarget.current_team ?? '-'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 grid grid-cols-2 gap-3">
-                      <MiniStat label="적합도" value={`${topTarget.fit_score ?? 0}/100`} />
-                      <MiniStat
-                        label="이적 가능성"
-                        value={`${topTarget.transfer_probability ?? 0}%`}
-                      />
-                    </div>
-                  </div>
-                </Link>
-              </section>
-            )}
-
             <section className="px-5 pt-7">
               <div className="mb-4 flex items-center justify-between">
                 <div>
@@ -498,10 +469,13 @@ export default function HomePage() {
                     return (
                       <motion.article
                         key={player.case_id}
-                        initial={{ opacity: 0, y: 18 }}
+                        initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.03 }}
-                        className="relative rounded-[26px] border border-[#26314f] bg-[#0b1020] p-5"
+                        transition={{
+                          duration: 0.45,
+                          delay: index * 0.05,
+                        }}
+                        className="relative rounded-[26px] border border-[#26314f] bg-[#0b1020] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[#c6a96b]/50 hover:shadow-[0_0_30px_rgba(198,169,107,0.18)]"
                       >
                         <button
                           type="button"
@@ -522,9 +496,16 @@ export default function HomePage() {
 
                             <div>
                               <h3 className="text-xl font-black">{player.name}</h3>
-                              <p className="text-sm text-[#a8b0c2]">
-                                {player.position ?? '-'} · {player.current_team ?? '-'}
-                              </p>
+
+                              <div className="mt-1 flex items-center gap-2 text-sm text-[#a8b0c2]">
+                                <span className="flex h-6 min-w-6 items-center justify-center rounded-full border border-[#c6a96b]/30 bg-[#11162a] px-2 text-[10px] font-black text-[#c6a96b]">
+                                  {getTeamInitials(player.current_team)}
+                                </span>
+
+                                <span>
+                                  {player.position ?? '-'} · {player.current_team ?? '-'}
+                                </span>
+                              </div>
                             </div>
                           </div>
 
@@ -567,7 +548,7 @@ export default function HomePage() {
                             <span className="text-xs text-[#94a3b8]">
                               {player.source ?? '출처 준비 중'}
                             </span>
-                            <span className="rounded-full bg-[#c6a96b] px-3 py-2 text-xs font-black text-[#0b1020]">
+                            <span className="rounded-full bg-[#c6a96b] px-3 py-2 text-xs font-black text-[#0b1020] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_18px_rgba(198,169,107,0.35)]">
                               자세히 보기 →
                             </span>
                           </div>
@@ -651,11 +632,30 @@ function FeatureIcon({ icon, label }: { icon: string; label: string }) {
   )
 }
 
-function MiniStat({ label, value }: { label: string; value: string }) {
+function UpdateItem({
+  player,
+  tag,
+  text,
+  time,
+}: {
+  player: string
+  tag: string
+  text: string
+  time: string
+}) {
   return (
-    <div className="rounded-2xl border border-[#26314f] bg-[#0b1020] p-4">
-      <p className="text-xs font-bold text-[#a8b0c2]">{label}</p>
-      <p className="mt-1 text-xl font-black text-[#c6a96b]">{value}</p>
+    <div className="rounded-2xl border border-[#1d2745] bg-[#11162a] p-4 transition-all duration-300 hover:border-[#c6a96b]/40 hover:shadow-[0_0_22px_rgba(198,169,107,0.12)]">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <p className="font-black text-white">{player}</p>
+
+        <span className="rounded-full bg-[#c6a96b] px-2.5 py-1 text-[10px] font-black text-[#0b1020]">
+          {tag}
+        </span>
+      </div>
+
+      <p className="text-sm leading-6 text-[#a8b0c2]">{text}</p>
+
+      <p className="mt-2 text-xs font-bold text-[#c6a96b]">{time}</p>
     </div>
   )
 }
@@ -671,18 +671,25 @@ function ProgressBox({
   percent: number
   color: string
 }) {
+  const safePercent = Math.min(Math.max(percent, 0), 100)
+
   return (
-    <div className="mt-3 rounded-2xl border border-[#26314f] bg-[#11162a] p-4">
+    <div className="mt-3 rounded-2xl border border-[#26314f] bg-[#11162a] p-4 transition-all duration-300 hover:border-[#c6a96b]/40 hover:shadow-[0_0_24px_rgba(198,169,107,0.12)]">
       <div className="mb-2 flex justify-between text-sm">
         <span className="text-[#a8b0c2]">{label}</span>
         <strong style={{ color }}>{value}</strong>
       </div>
 
       <div className="h-2 overflow-hidden rounded-full bg-[#0b1020]">
-        <div
-          className="h-full rounded-full"
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${safePercent}%` }}
+          transition={{
+            duration: 0.9,
+            ease: 'easeOut',
+          }}
+          className="h-full rounded-full shadow-[0_0_14px_rgba(255,255,255,0.16)]"
           style={{
-            width: `${Math.min(Math.max(percent, 0), 100)}%`,
             background: color,
           }}
         />
