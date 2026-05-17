@@ -7,16 +7,17 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  const username = process.env.ADMIN_USERNAME
+  const password = process.env.ADMIN_PASSWORD
+
   const basicAuth = request.headers.get('authorization')
 
   if (basicAuth) {
     const authValue = basicAuth.split(' ')[1]
-    const [user, password] = atob(authValue).split(':')
+    const decoded = Buffer.from(authValue, 'base64').toString()
+    const [user, pass] = decoded.split(':')
 
-    if (
-      user === process.env.ADMIN_USERNAME &&
-      password === process.env.ADMIN_PASSWORD
-    ) {
+    if (user === username && pass === password) {
       return NextResponse.next()
     }
   }

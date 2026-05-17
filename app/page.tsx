@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
@@ -28,6 +29,8 @@ type Target = {
   probability_confidence: string | null
   probability_summary: string | null
 }
+
+const positionOptions = ['GK', 'LB', 'RB', 'CB', 'DM', 'CM', 'AMF', 'LW', 'RW', 'ST']
 
 function getInitials(name: string) {
   return name
@@ -67,16 +70,12 @@ function getProbabilityColor(score: number) {
   return '#f87171'
 }
 
-function formatRumorDate(value: string | null) {
-  if (!value) return '-'
-  return value.slice(0, 10)
-}
-
 export default function HomePage() {
   const latestPosts = posts.slice(0, 2)
 
   const [targets, setTargets] = useState<Target[]>([])
   const [favorites, setFavorites] = useState<string[]>([])
+  const [activeTab, setActiveTab] = useState<'home' | 'transfer' | 'news'>('home')
 
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('all')
@@ -104,34 +103,17 @@ export default function HomePage() {
 
   useEffect(() => {
     const saved = localStorage.getItem('spurs-scout-favorites')
-
-    if (saved) {
-      setFavorites(JSON.parse(saved))
-    }
+    if (saved) setFavorites(JSON.parse(saved))
   }, [])
 
   function toggleFavorite(slug: string) {
-    let updated: string[]
-
-    if (favorites.includes(slug)) {
-      updated = favorites.filter((item) => item !== slug)
-    } else {
-      updated = [...favorites, slug]
-    }
+    const updated = favorites.includes(slug)
+      ? favorites.filter((item) => item !== slug)
+      : [...favorites, slug]
 
     setFavorites(updated)
     localStorage.setItem('spurs-scout-favorites', JSON.stringify(updated))
   }
-
-  const positionOptions = useMemo(() => {
-    const unique = new Set(
-      targets
-        .map((player) => player.position)
-        .filter((item): item is string => Boolean(item))
-    )
-
-    return Array.from(unique).sort()
-  }, [targets])
 
   const filteredTargets = useMemo(() => {
     let result = [...targets]
@@ -156,21 +138,10 @@ export default function HomePage() {
       )
     }
 
-    if (status !== 'all') {
-      result = result.filter((player) => player.status === status)
-    }
-
-    if (tier !== 'all') {
-      result = result.filter((player) => player.scout_tier === tier)
-    }
-
-    if (position !== 'all') {
-      result = result.filter((player) => player.position === position)
-    }
-
-    if (favoriteOnly) {
-      result = result.filter((player) => favorites.includes(player.slug))
-    }
+    if (status !== 'all') result = result.filter((player) => player.status === status)
+    if (tier !== 'all') result = result.filter((player) => player.scout_tier === tier)
+    if (position !== 'all') result = result.filter((player) => player.position === position)
+    if (favoriteOnly) result = result.filter((player) => favorites.includes(player.slug))
 
     if (sort === 'fit') {
       result.sort((a, b) => (b.fit_score ?? 0) - (a.fit_score ?? 0))
@@ -182,7 +153,6 @@ export default function HomePage() {
 
     if (sort === 'tier') {
       const order: Record<string, number> = { S: 5, A: 4, B: 3, C: 2, D: 1 }
-
       result.sort(
         (a, b) =>
           (order[b.scout_tier ?? ''] ?? 0) -
@@ -192,6 +162,8 @@ export default function HomePage() {
 
     return result
   }, [targets, search, status, tier, position, sort, favoriteOnly, favorites])
+
+  const topTarget = filteredTargets[0]
 
   function resetFilters() {
     setSearch('')
@@ -203,413 +175,518 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#17213a_0%,#0b1020_45%,#050816_100%)] px-4 py-8 text-white sm:px-6 sm:py-10">
-      <div className="mx-auto max-w-[1220px]">
-        <motion.section
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
-          className="mb-8"
-        >
-          <p className="mb-2 text-[13px] font-black tracking-[3px] text-[#c6a96b]">
-            TRANSFER INTELLIGENCE
-          </p>
-
-          <h1 className="mb-3 text-4xl font-black tracking-wide text-white sm:text-5xl">
-            SPURS SCOUT
-          </h1>
-
-          <p className="max-w-[690px] leading-8 text-[#a8b0c2]">
-            Tottenham 팬들을 위한 비공식 이적 분석 플랫폼입니다. 루머를 단순히
-            모으는 것이 아니라, 전술 적합도와 Scout Tier로 영입 가치를 판단합니다.
-          </p>
-
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href="/compare"
-              className="rounded-2xl bg-[#c6a96b] px-5 py-3 font-black text-[#0b1020] no-underline transition hover:opacity-90"
+    <main className="min-h-screen bg-[#050816] text-white">
+      <div className="mx-auto max-w-[430px] bg-[#0b1020] pb-24 shadow-2xl lg:max-w-[1220px] lg:bg-transparent lg:px-6 lg:py-8">
+        <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0b1020]/95 px-5 py-4 backdrop-blur lg:rounded-3xl lg:border lg:border-[#26314f]">
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setActiveTab('home')}
+              className="text-2xl font-black text-white"
             >
-              후보 비교하기 →
-            </Link>
-<Link
-  href="/admin"
-  prefetch={false}
-  className="rounded-2xl border border-[#c6a96b]/40 px-5 py-3 font-black text-[#c6a96b] no-underline transition hover:bg-[#c6a96b]/10"
->
-  관리자 →
-</Link>
-
-<Link
-  href="/privacy"
-  className="rounded-2xl border border-[#c6a96b]/40 px-5 py-3 font-black text-[#c6a96b] no-underline transition hover:bg-[#c6a96b]/10"
->
-  개인정보처리방침 →
-</Link>
-            <Link
-              href="/blog"
-              className="rounded-2xl border border-[#c6a96b]/40 px-5 py-3 font-black text-[#c6a96b] no-underline transition hover:bg-[#c6a96b]/10"
-            >
-              블로그 보기 →
-            </Link>
-          </div>
-        </motion.section>
-
-        <motion.section
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.08 }}
-          className="mb-8 rounded-[22px] border border-[#26314f] bg-[rgba(17,22,42,0.78)] p-4"
-        >
-          <div className="grid gap-3 md:grid-cols-6">
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="선수 이름 / 팀 / 출처 검색"
-              className="rounded-2xl border border-[#33415f] bg-[#0b1020] px-4 py-3 text-white outline-none transition focus:border-[#c6a96b] md:col-span-2"
-            />
-
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="rounded-2xl border border-[#33415f] bg-[#0b1020] px-4 py-3 text-white outline-none transition focus:border-[#c6a96b]"
-            >
-              <option value="all">전체 상태</option>
-              <option value="linked">linked</option>
-              <option value="interest">interest</option>
-              <option value="talks">talks</option>
-              <option value="verbal">verbal</option>
-              <option value="official">official</option>
-            </select>
-
-            <select
-              value={tier}
-              onChange={(e) => setTier(e.target.value)}
-              className="rounded-2xl border border-[#33415f] bg-[#0b1020] px-4 py-3 text-white outline-none transition focus:border-[#c6a96b]"
-            >
-              <option value="all">전체 Tier</option>
-              <option value="S">S Tier</option>
-              <option value="A">A Tier</option>
-              <option value="B">B Tier</option>
-              <option value="C">C Tier</option>
-              <option value="D">D Tier</option>
-            </select>
-
-            <select
-              value={position}
-              onChange={(e) => setPosition(e.target.value)}
-              className="rounded-2xl border border-[#33415f] bg-[#0b1020] px-4 py-3 text-white outline-none transition focus:border-[#c6a96b]"
-            >
-              <option value="all">전체 포지션</option>
-              {positionOptions.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value)}
-              className="rounded-2xl border border-[#33415f] bg-[#0b1020] px-4 py-3 text-white outline-none transition focus:border-[#c6a96b]"
-            >
-              <option value="fit">적합도 높은 순</option>
-              <option value="tier">Scout 티어 높은 순</option>
-              <option value="name">이름순</option>
-            </select>
+              ‹
+            </button>
 
             <button
               type="button"
-              onClick={() => setFavoriteOnly(!favoriteOnly)}
-              className={`rounded-2xl border px-4 py-3 font-bold transition ${
-                favoriteOnly
-                  ? 'border-[#c6a96b] bg-[#c6a96b] text-[#0b1020]'
-                  : 'border-[#33415f] bg-[#0b1020] text-white hover:border-[#c6a96b]'
+              onClick={() => setActiveTab('home')}
+              className="text-lg font-black tracking-wide text-white"
+            >
+              SPURS SCOUT
+            </button>
+
+            <Link
+              href="/admin"
+              prefetch={false}
+              className="rounded-full border border-[#c6a96b]/40 px-3 py-1.5 text-xs font-bold text-[#c6a96b] no-underline"
+            >
+              Admin
+            </Link>
+          </div>
+        </header>
+
+        <section className="px-5 pt-8 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative overflow-hidden rounded-[34px] border border-white/10 bg-[radial-gradient(circle_at_center,#1e2a4a_0%,#10182f_45%,#060914_100%)] px-5 py-12 shadow-[0_0_90px_rgba(198,169,107,0.12)]"
+          >
+            <div className="absolute inset-0 opacity-25">
+              <div className="absolute left-[8%] top-[24%] h-[150px] w-[84%] rounded-t-full border-t border-[#c6a96b]/25" />
+              <div className="absolute left-[16%] top-[32%] h-[120px] w-[68%] rounded-t-full border-t border-white/10" />
+              <div className="absolute bottom-0 left-0 right-0 h-40 bg-[linear-gradient(to_top,rgba(198,169,107,0.10),transparent)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.35)_100%)]" />
+            </div>
+
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="mb-7 flex h-[170px] w-[170px] items-center justify-center rounded-full border border-[#e5e7eb]/70 bg-[radial-gradient(circle,#f8fafc_0%,#e5e7eb_55%,#c6a96b_100%)] p-4 shadow-[0_0_50px_rgba(255,255,255,0.20)]">
+                <div className="flex h-full w-full items-center justify-center rounded-full bg-[#f8fafc]">
+                  <Image
+                    src="/spurs-scout-logo.png"
+                    alt="SPURS SCOUT logo"
+                    width={125}
+                    height={125}
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+              </div>
+
+              <p className="mb-4 text-xs font-black tracking-[5px] text-[#c6a96b]">
+                TOTTENHAM TRANSFER HUB
+              </p>
+
+              <h1 className="bg-[linear-gradient(180deg,#ffffff_0%,#d7dbe7_45%,#8f96aa_100%)] bg-clip-text text-5xl font-black tracking-tight text-transparent sm:text-6xl">
+                SPURS
+                <br />
+                SCOUT
+              </h1>
+
+              <div className="mt-8 grid w-full max-w-[420px] grid-cols-3 gap-3">
+                <FeatureIcon icon="▦" label="전술 적합도" />
+                <FeatureIcon icon="⌕" label="Scout Tier" />
+                <FeatureIcon icon="%" label="이적 가능성 분석" />
+              </div>
+
+              <div className="my-7 h-[1px] w-full max-w-[360px] bg-[#c6a96b]/50" />
+
+              <p className="mx-auto max-w-[360px] text-sm leading-7 text-[#f1f5f9]">
+                토트넘 이적 루머를 전술 적합도, Scout Tier, 이적 가능성으로 분석합니다.
+              </p>
+            </div>
+          </motion.div>
+
+          <div className="mt-5 grid grid-cols-3 gap-3">
+            <button
+              type="button"
+              onClick={() => setActiveTab('transfer')}
+              className={`rounded-2xl px-3 py-3 text-sm font-black ${
+                activeTab === 'transfer'
+                  ? 'bg-[#c6a96b] text-[#0b1020]'
+                  : 'border border-[#33415f] bg-[#0b1020] text-white'
               }`}
             >
-              ⭐ 관심 선수
+              이적시장
             </button>
-          </div>
 
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-[#a8b0c2]">
-              전체 {targets.length}명 · 표시 {filteredTargets.length}명 · 관심{' '}
-              {favorites.length}명
-            </p>
+            <Link
+              href="/compare"
+              className="rounded-2xl border border-[#33415f] bg-[#0b1020] px-3 py-3 text-sm font-black text-white no-underline"
+            >
+              비교
+            </Link>
 
             <button
               type="button"
-              onClick={resetFilters}
-              className="rounded-full border border-[#c6a96b]/30 px-4 py-2 text-sm font-bold text-[#c6a96b] transition hover:bg-[#c6a96b]/10"
+              onClick={() => setActiveTab('news')}
+              className={`rounded-2xl px-3 py-3 text-sm font-black ${
+                activeTab === 'news'
+                  ? 'bg-[#c6a96b] text-[#0b1020]'
+                  : 'border border-[#33415f] bg-[#0b1020] text-white'
+              }`}
             >
-              필터 초기화
+              뉴스
             </button>
           </div>
-        </motion.section>
 
-        {filteredTargets.length === 0 ? (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-[#aaa]"
-          >
-            조건에 맞는 선수가 없습니다.
-          </motion.p>
-        ) : (
-          <section className="grid gap-6 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
-            {filteredTargets.map((player, index) => {
-              const score = player.fit_score ?? 0
-              const scoreColor = getScoreColor(score)
-              const probability = Math.min(
-                Math.max(player.transfer_probability ?? 0, 0),
-                100
-              )
-              const probabilityColor = getProbabilityColor(probability)
-              const tierColor = getTierColor(player.scout_tier)
-              const isFavorite = favorites.includes(player.slug)
+          <div className="mt-5 rounded-2xl border border-[#c6a96b]/25 bg-[#2a2f42] px-5 py-5 text-center">
+            <p className="text-xs font-bold text-[#a8b0c2]">AD / NOTICE</p>
+            <p className="mt-1 text-xl font-black text-white">광고 영역</p>
+          </div>
+        </section>
 
-              return (
-                <motion.div
-                  key={player.case_id}
-                  initial={{ opacity: 0, y: 28 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.45, delay: index * 0.04 }}
-                  className="relative"
-                >
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.preventDefault()
-                      event.stopPropagation()
-                      toggleFavorite(player.slug)
-                    }}
-                    className="absolute right-4 top-4 z-20 rounded-full border border-[#c6a96b]/30 bg-[#0b1020]/90 px-3 py-2 text-lg shadow-lg transition hover:scale-110 hover:border-[#c6a96b]"
-                    aria-label="관심 선수 저장"
-                  >
-                    {isFavorite ? '⭐' : '☆'}
-                  </button>
+        {activeTab === 'home' && (
+          <section className="px-5 pt-6">
+            <div className="rounded-[28px] border border-[#26314f] bg-[#0b1020] p-6">
+              <p className="mb-2 text-xs font-black tracking-[2px] text-[#c6a96b]">
+                WELCOME
+              </p>
 
-                  <Link
-                    href={`/player/${player.slug}`}
-                    className="text-white no-underline"
-                  >
-                    <motion.article
-                      whileHover={{ y: -8, scale: 1.015 }}
-                      transition={{
-                        type: 'spring',
-                        stiffness: 260,
-                        damping: 18,
-                      }}
-                      className="group flex h-full min-h-[470px] cursor-pointer flex-col rounded-[26px] border border-[#26314f] bg-[linear-gradient(180deg,rgba(17,22,42,0.96),rgba(10,14,26,0.96))] p-6 transition duration-300 hover:border-[#c6a96b] hover:shadow-[0_25px_60px_rgba(198,169,107,0.18)]"
-                    >
-                      <div className="mb-5 flex items-start justify-between gap-4 pr-12">
-                        <div className="flex h-[60px] w-[60px] items-center justify-center rounded-[20px] bg-[linear-gradient(135deg,#c6a96b_0%,#6b5a2e_100%)] text-xl font-black text-[#0b1020] transition group-hover:scale-105">
-                          {getInitials(player.name)}
-                        </div>
+              <h2 className="text-2xl font-black text-white">
+                토트넘 이적시장 분석 홈
+              </h2>
 
-                        <div className="flex flex-wrap items-center justify-end gap-2">
-                          <span
-                            className="rounded-full px-2.5 py-1.5 text-xs font-black text-[#0b1020]"
-                            style={{ background: tierColor }}
-                          >
-                            {player.scout_tier ?? '-'} TIER
-                          </span>
+              <p className="mt-3 leading-7 text-[#a8b0c2]">
+                상단 메뉴에서 이적시장, 비교, 뉴스를 선택해 Spurs Scout 분석을 확인하세요.
+              </p>
 
-                          <span
-                            className="rounded-full px-3 py-1.5 text-xs font-extrabold uppercase text-white"
-                            style={{ background: getStatusColor(player.status) }}
-                          >
-                            {player.status ?? 'unknown'}
-                          </span>
-                        </div>
-                      </div>
+              <button
+                type="button"
+                onClick={() => setActiveTab('transfer')}
+                className="mt-5 rounded-2xl bg-[#c6a96b] px-5 py-3 font-black text-[#0b1020]"
+              >
+                이적시장 보러가기 →
+              </button>
+            </div>
 
-                      <h2 className="mb-2 text-[27px]">{player.name}</h2>
+            {topTarget && (
+              <div className="mt-5 rounded-[28px] border border-[#26314f] bg-[#0b1020] p-6">
+                <p className="mb-2 text-xs font-black tracking-[2px] text-[#c6a96b]">
+                  FEATURED TARGET
+                </p>
 
-                      <p className="mb-4 font-extrabold text-[#c6a96b]">
-                        현재 소속팀: {player.current_team ?? '-'}
-                      </p>
+                <h3 className="text-2xl font-black">{topTarget.name}</h3>
 
-                      <div className="mb-5 grid gap-2 rounded-[18px] border border-[rgba(198,169,107,0.18)] bg-[rgba(198,169,107,0.06)] p-4">
-                        <div className="flex flex-wrap gap-2">
-                          <InfoPill>출처: {player.source ?? '-'}</InfoPill>
-                          <InfoPill>{player.reliability_tier ?? '-'}</InfoPill>
-                        </div>
+                <p className="mt-2 text-sm text-[#a8b0c2]">
+                  {topTarget.position ?? '-'} · {topTarget.current_team ?? '-'}
+                </p>
 
-                        <p className="text-[13px] font-semibold text-[#94a3b8]">
-                          루머 날짜: {formatRumorDate(player.rumor_date)}
-                        </p>
-                      </div>
-
-                      <div className="mb-5 rounded-[18px] border border-[rgba(198,169,107,0.18)] bg-[rgba(198,169,107,0.08)] p-4">
-                        <div className="mb-2 flex items-center justify-between gap-3">
-                          <p className="text-[13px] font-black text-[#c6a96b]">
-                            Transfer Probability
-                          </p>
-
-                          <strong
-                            className="text-xl"
-                            style={{ color: probabilityColor }}
-                          >
-                            {probability}%
-                          </strong>
-                        </div>
-
-                        <div className="h-2.5 overflow-hidden rounded-full border border-[#1f2942] bg-[#0b1020]">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${probability}%` }}
-                            transition={{
-                              duration: 0.7,
-                              delay: 0.15 + index * 0.04,
-                            }}
-                            style={{
-                              height: '100%',
-                              borderRadius: 999,
-                              background: probabilityColor,
-                            }}
-                          />
-                        </div>
-
-                        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                          <p className="text-[12px] font-bold text-[#94a3b8]">
-                            Spurs Scout 추정치
-                          </p>
-
-                          {player.probability_confidence && (
-                            <span className="rounded-full border border-[#c6a96b]/25 bg-[#111827] px-3 py-1 text-[12px] font-bold text-[#d7bd77]">
-                              Confidence: {player.probability_confidence}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="mb-6 rounded-[18px] border border-[rgba(198,169,107,0.18)] bg-[rgba(198,169,107,0.08)] p-4 transition group-hover:border-[rgba(198,169,107,0.35)]">
-                        <p className="mb-2 text-[13px] font-black text-[#c6a96b]">
-                          한줄 결론
-                        </p>
-
-                        <p className="m-0 text-[15px] leading-7 text-[#f3f4f6]">
-                          {player.conclusion ??
-                            '아직 한줄 결론이 입력되지 않았습니다.'}
-                        </p>
-                      </div>
-
-                      <div className="mb-5">
-                        <div className="mb-2 flex justify-between text-sm text-[#a8b0c2]">
-                          <span>전술 적합도</span>
-                          <strong style={{ color: scoreColor }}>{score}/100</strong>
-                        </div>
-
-                        <div className="h-2.5 overflow-hidden rounded-full border border-[#1f2942] bg-[#0b1020]">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${score}%` }}
-                            transition={{
-                              duration: 0.7,
-                              delay: 0.15 + index * 0.04,
-                            }}
-                            style={{
-                              height: '100%',
-                              borderRadius: 999,
-                              background: scoreColor,
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="mt-auto flex items-center justify-between gap-3 border-t border-[#26314f] pt-4">
-                        <span className="text-[13px] text-[#94a3b8]">
-                          Scout Report 보기
-                        </span>
-
-                        <span className="rounded-full bg-[#c6a96b] px-3 py-2 text-[13px] font-black text-[#0b1020] transition group-hover:bg-[#d7bd77]">
-                          자세히 보기 →
-                        </span>
-                      </div>
-                    </motion.article>
-                  </Link>
-                </motion.div>
-              )
-            })}
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <MiniStat label="적합도" value={`${topTarget.fit_score ?? 0}/100`} />
+                  <MiniStat
+                    label="이적 가능성"
+                    value={`${topTarget.transfer_probability ?? 0}%`}
+                  />
+                </div>
+              </div>
+            )}
           </section>
         )}
 
-        <section className="mt-16">
-          <div className="mb-6 flex items-center justify-between gap-4">
-            <div>
-              <p className="mb-2 text-sm font-black tracking-[3px] text-[#c4a35a]">
-                SPURS SCOUT BLOG
-              </p>
+        {activeTab === 'transfer' && (
+          <>
+            <section className="px-5 pt-6">
+              <div className="rounded-[26px] border border-[#26314f] bg-[#0b1020] p-4">
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="선수 이름 / 팀 / 출처 검색"
+                  className="mb-3 w-full rounded-2xl border border-[#33415f] bg-[#11162a] px-4 py-3 text-sm text-white outline-none focus:border-[#c6a96b]"
+                />
 
-              <h2 className="text-3xl font-black text-white">최신 분석 글</h2>
-            </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className="rounded-2xl border border-[#33415f] bg-[#11162a] px-3 py-3 text-sm text-white"
+                  >
+                    <option value="all">전체 상태</option>
+                    <option value="linked">linked</option>
+                    <option value="interest">interest</option>
+                    <option value="talks">talks</option>
+                    <option value="verbal">verbal</option>
+                    <option value="official">official</option>
+                  </select>
 
-            <Link
-              href="/blog"
-              className="text-sm font-bold text-[#c4a35a] hover:underline"
-            >
-              전체 보기 →
-            </Link>
-          </div>
+                  <select
+                    value={tier}
+                    onChange={(e) => setTier(e.target.value)}
+                    className="rounded-2xl border border-[#33415f] bg-[#11162a] px-3 py-3 text-sm text-white"
+                  >
+                    <option value="all">전체 Tier</option>
+                    <option value="S">S Tier</option>
+                    <option value="A">A Tier</option>
+                    <option value="B">B Tier</option>
+                    <option value="C">C Tier</option>
+                    <option value="D">D Tier</option>
+                  </select>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            {latestPosts.map((post) => (
-              <Link
-                key={post.slug}
-                href={`/blog/${post.slug}`}
-                className="rounded-3xl border border-[#26314f] bg-[#11162a] p-6 no-underline transition hover:border-[#c4a35a]"
-              >
-                <p className="mb-3 text-sm font-bold text-[#c4a35a]">
-                  {post.category}
+                  <select
+                    value={position}
+                    onChange={(e) => setPosition(e.target.value)}
+                    className="rounded-2xl border border-[#33415f] bg-[#11162a] px-3 py-3 text-sm text-white"
+                  >
+                    <option value="all">전체 포지션</option>
+                    {positionOptions.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={sort}
+                    onChange={(e) => setSort(e.target.value)}
+                    className="rounded-2xl border border-[#33415f] bg-[#11162a] px-3 py-3 text-sm text-white"
+                  >
+                    <option value="fit">적합도순</option>
+                    <option value="tier">티어순</option>
+                    <option value="name">이름순</option>
+                  </select>
+                </div>
+
+                <div className="mt-3 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => setFavoriteOnly(!favoriteOnly)}
+                    className={`rounded-full px-4 py-2 text-xs font-bold ${
+                      favoriteOnly
+                        ? 'bg-[#c6a96b] text-[#0b1020]'
+                        : 'border border-[#33415f] text-white'
+                    }`}
+                  >
+                    ⭐ 관심 선수
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    className="text-xs font-bold text-[#c6a96b]"
+                  >
+                    초기화
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            {topTarget && (
+              <section className="px-5 pt-6">
+                <p className="mb-3 text-sm font-black tracking-[2px] text-[#c6a96b]">
+                  TOP TARGET
                 </p>
 
-                <h3 className="mb-3 text-2xl font-black text-white">
-                  {post.title}
-                </h3>
+                <Link href={`/player/${topTarget.slug}`} className="no-underline">
+                  <div className="rounded-[28px] border border-[#c6a96b]/30 bg-[linear-gradient(135deg,#1d2745,#101525)] p-5 text-white">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#c6a96b] text-xl font-black text-[#0b1020]">
+                        {getInitials(topTarget.name)}
+                      </div>
 
-                <p className="mb-4 leading-7 text-[#a8b0c2]">{post.excerpt}</p>
+                      <div className="min-w-0 flex-1">
+                        <h2 className="truncate text-2xl font-black">
+                          {topTarget.name}
+                        </h2>
+                        <p className="text-sm text-[#a8b0c2]">
+                          {topTarget.position ?? '-'} · {topTarget.current_team ?? '-'}
+                        </p>
+                      </div>
+                    </div>
 
-                <p className="text-sm text-[#777]">{post.date}</p>
+                    <div className="mt-5 grid grid-cols-2 gap-3">
+                      <MiniStat label="적합도" value={`${topTarget.fit_score ?? 0}/100`} />
+                      <MiniStat
+                        label="이적 가능성"
+                        value={`${topTarget.transfer_probability ?? 0}%`}
+                      />
+                    </div>
+                  </div>
+                </Link>
+              </section>
+            )}
+
+            <section className="px-5 pt-7">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-black tracking-[2px] text-[#c6a96b]">
+                    TRANSFER MARKET
+                  </p>
+                  <h2 className="text-2xl font-black">이적 후보</h2>
+                </div>
+
+                <p className="text-xs text-[#a8b0c2]">
+                  {filteredTargets.length}/{targets.length}
+                </p>
+              </div>
+
+              {filteredTargets.length === 0 ? (
+                <p className="rounded-2xl border border-[#26314f] bg-[#0b1020] p-5 text-sm text-[#a8b0c2]">
+                  선택한 포지션의 이적 소식이 아직 없습니다.
+                </p>
+              ) : (
+                <div className="grid gap-4 lg:grid-cols-3">
+                  {filteredTargets.map((player, index) => {
+                    const score = player.fit_score ?? 0
+                    const probability = Math.min(
+                      Math.max(player.transfer_probability ?? 0, 0),
+                      100
+                    )
+                    const scoreColor = getScoreColor(score)
+                    const probabilityColor = getProbabilityColor(probability)
+                    const tierColor = getTierColor(player.scout_tier)
+                    const isFavorite = favorites.includes(player.slug)
+
+                    return (
+                      <motion.article
+                        key={player.case_id}
+                        initial={{ opacity: 0, y: 18 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        className="relative rounded-[26px] border border-[#26314f] bg-[#0b1020] p-5"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => toggleFavorite(player.slug)}
+                          className="absolute right-4 top-4 rounded-full border border-[#c6a96b]/30 bg-[#11162a] px-3 py-2 text-lg"
+                        >
+                          {isFavorite ? '⭐' : '☆'}
+                        </button>
+
+                        <Link
+                          href={`/player/${player.slug}`}
+                          className="text-white no-underline"
+                        >
+                          <div className="flex gap-4 pr-12">
+                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#c6a96b] text-lg font-black text-[#0b1020]">
+                              {getInitials(player.name)}
+                            </div>
+
+                            <div>
+                              <h3 className="text-xl font-black">{player.name}</h3>
+                              <p className="text-sm text-[#a8b0c2]">
+                                {player.position ?? '-'} · {player.current_team ?? '-'}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            <span
+                              className="rounded-full px-2.5 py-1 text-xs font-black text-[#0b1020]"
+                              style={{ background: tierColor }}
+                            >
+                              {player.scout_tier ?? '-'} TIER
+                            </span>
+
+                            <span
+                              className="rounded-full px-2.5 py-1 text-xs font-black uppercase text-white"
+                              style={{ background: getStatusColor(player.status) }}
+                            >
+                              {player.status ?? 'unknown'}
+                            </span>
+                          </div>
+
+                          <ProgressBox
+                            label="이적 가능성"
+                            value={`${probability}%`}
+                            percent={probability}
+                            color={probabilityColor}
+                          />
+
+                          <ProgressBox
+                            label="전술 적합도"
+                            value={`${score}/100`}
+                            percent={score}
+                            color={scoreColor}
+                          />
+
+                          <p className="mt-4 line-clamp-2 text-sm leading-6 text-[#d1d5db]">
+                            {player.conclusion ??
+                              '아직 한줄 결론이 입력되지 않았습니다.'}
+                          </p>
+
+                          <div className="mt-4 flex items-center justify-between border-t border-[#26314f] pt-4">
+                            <span className="text-xs text-[#94a3b8]">
+                              {player.source ?? '출처 준비 중'}
+                            </span>
+                            <span className="rounded-full bg-[#c6a96b] px-3 py-2 text-xs font-black text-[#0b1020]">
+                              자세히 보기 →
+                            </span>
+                          </div>
+                        </Link>
+                      </motion.article>
+                    )
+                  })}
+                </div>
+              )}
+            </section>
+          </>
+        )}
+
+        {activeTab === 'news' && (
+          <section className="px-5 pt-10">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-2xl font-black">최신 뉴스</h2>
+              <Link href="/blog" className="text-sm font-bold text-[#c6a96b]">
+                전체 보기 →
               </Link>
-            ))}
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              {latestPosts.map((post) => (
+                <Link
+                  key={post.slug}
+                  href={`/blog/${post.slug}`}
+                  className="rounded-[24px] border border-[#26314f] bg-[#0b1020] p-5 no-underline"
+                >
+                  <p className="mb-2 text-xs font-bold text-[#c6a96b]">
+                    {post.category}
+                  </p>
+                  <h3 className="mb-2 text-xl font-black text-white">
+                    {post.title}
+                  </h3>
+                  <p className="line-clamp-2 text-sm leading-6 text-[#a8b0c2]">
+                    {post.excerpt}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <footer className="px-5 pt-10">
+          <div className="rounded-[24px] border border-[#26314f] bg-[#0b1020] p-5">
+            <div className="flex flex-wrap gap-3">
+              <Link href="/privacy" className="text-sm font-bold text-[#c6a96b]">
+                개인정보처리방침
+              </Link>
+              <Link
+                href="/admin"
+                prefetch={false}
+                className="text-sm font-bold text-[#c6a96b]"
+              >
+                관리자
+              </Link>
+            </div>
+
+            <p className="mt-4 text-xs leading-6 text-[#777]">
+              본 사이트는 팬이 제작한 비공식 분석 플랫폼입니다. Tottenham Hotspur와
+              공식 제휴된 서비스가 아닙니다.
+            </p>
           </div>
-        </section>
-
-        <section className="mt-16 rounded-3xl border border-[#26314f] bg-[#11162a] p-8">
-          <p className="mb-2 text-sm font-black tracking-[3px] text-[#c4a35a]">
-            PLAYER COMPARISON
-          </p>
-
-          <h2 className="mb-4 text-3xl font-black text-white">
-            이적 후보 비교 분석
-          </h2>
-
-          <p className="mb-6 max-w-3xl leading-8 text-[#a8b0c2]">
-            토트넘 이적 후보들을 전술 적합도, Scout Tier, 장점과 리스크
-            기준으로 비교 분석합니다.
-          </p>
-
-          <Link
-            href="/compare"
-            className="inline-flex rounded-2xl bg-[#c4a35a] px-6 py-3 font-black text-black no-underline transition hover:opacity-90"
-          >
-            Compare 페이지 이동 →
-          </Link>
-        </section>
-
-        <p className="mt-9 text-[13px] text-[#777]">
-          본 사이트는 팬이 제작한 비공식 분석 플랫폼입니다. Tottenham Hotspur와
-          공식 제휴된 서비스가 아닙니다.
-        </p>
+        </footer>
       </div>
     </main>
   )
 }
 
-function InfoPill({ children }: { children: React.ReactNode }) {
+function FeatureIcon({ icon, label }: { icon: string; label: string }) {
   return (
-    <span className="rounded-full border border-[#c6a96b]/25 bg-[#111827] px-3 py-1.5 text-[12px] font-bold text-[#d7bd77]">
-      {children}
-    </span>
+    <div className="flex flex-col items-center gap-2">
+      <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#c6a96b]/40 bg-[#0b1020]/70 text-xl font-black text-[#c6a96b]">
+        {icon}
+      </div>
+      <p className="text-center text-[11px] font-bold leading-4 text-white">
+        {label}
+      </p>
+    </div>
+  )
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-[#26314f] bg-[#0b1020] p-4">
+      <p className="text-xs font-bold text-[#a8b0c2]">{label}</p>
+      <p className="mt-1 text-xl font-black text-[#c6a96b]">{value}</p>
+    </div>
+  )
+}
+
+function ProgressBox({
+  label,
+  value,
+  percent,
+  color,
+}: {
+  label: string
+  value: string
+  percent: number
+  color: string
+}) {
+  return (
+    <div className="mt-3 rounded-2xl border border-[#26314f] bg-[#11162a] p-4">
+      <div className="mb-2 flex justify-between text-sm">
+        <span className="text-[#a8b0c2]">{label}</span>
+        <strong style={{ color }}>{value}</strong>
+      </div>
+
+      <div className="h-2 overflow-hidden rounded-full bg-[#0b1020]">
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: `${Math.min(Math.max(percent, 0), 100)}%`,
+            background: color,
+          }}
+        />
+      </div>
+    </div>
   )
 }
