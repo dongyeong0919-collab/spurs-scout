@@ -24,6 +24,9 @@ type Target = {
   source: string | null
   reliability_tier: string | null
   rumor_date: string | null
+  transfer_probability: number | null
+  probability_confidence: string | null
+  probability_summary: string | null
 }
 
 function getInitials(name: string) {
@@ -55,6 +58,12 @@ function getTierColor(tier: string | null) {
 function getScoreColor(score: number) {
   if (score >= 85) return '#4ade80'
   if (score >= 70) return '#facc15'
+  return '#f87171'
+}
+
+function getProbabilityColor(score: number) {
+  if (score >= 70) return '#4ade80'
+  if (score >= 40) return '#facc15'
   return '#f87171'
 }
 
@@ -138,6 +147,8 @@ export default function HomePage() {
           player.position,
           player.source,
           player.reliability_tier,
+          player.probability_confidence,
+          player.probability_summary,
         ]
           .join(' ')
           .toLowerCase()
@@ -220,7 +231,20 @@ export default function HomePage() {
             >
               후보 비교하기 →
             </Link>
+<Link
+  href="/admin"
+  prefetch={false}
+  className="rounded-2xl border border-[#c6a96b]/40 px-5 py-3 font-black text-[#c6a96b] no-underline transition hover:bg-[#c6a96b]/10"
+>
+  관리자 →
+</Link>
 
+<Link
+  href="/privacy"
+  className="rounded-2xl border border-[#c6a96b]/40 px-5 py-3 font-black text-[#c6a96b] no-underline transition hover:bg-[#c6a96b]/10"
+>
+  개인정보처리방침 →
+</Link>
             <Link
               href="/blog"
               className="rounded-2xl border border-[#c6a96b]/40 px-5 py-3 font-black text-[#c6a96b] no-underline transition hover:bg-[#c6a96b]/10"
@@ -335,6 +359,11 @@ export default function HomePage() {
             {filteredTargets.map((player, index) => {
               const score = player.fit_score ?? 0
               const scoreColor = getScoreColor(score)
+              const probability = Math.min(
+                Math.max(player.transfer_probability ?? 0, 0),
+                100
+              )
+              const probabilityColor = getProbabilityColor(probability)
               const tierColor = getTierColor(player.scout_tier)
               const isFavorite = favorites.includes(player.slug)
 
@@ -370,7 +399,7 @@ export default function HomePage() {
                         stiffness: 260,
                         damping: 18,
                       }}
-                      className="group flex h-full min-h-[390px] cursor-pointer flex-col rounded-[26px] border border-[#26314f] bg-[linear-gradient(180deg,rgba(17,22,42,0.96),rgba(10,14,26,0.96))] p-6 transition duration-300 hover:border-[#c6a96b] hover:shadow-[0_25px_60px_rgba(198,169,107,0.18)]"
+                      className="group flex h-full min-h-[470px] cursor-pointer flex-col rounded-[26px] border border-[#26314f] bg-[linear-gradient(180deg,rgba(17,22,42,0.96),rgba(10,14,26,0.96))] p-6 transition duration-300 hover:border-[#c6a96b] hover:shadow-[0_25px_60px_rgba(198,169,107,0.18)]"
                     >
                       <div className="mb-5 flex items-start justify-between gap-4 pr-12">
                         <div className="flex h-[60px] w-[60px] items-center justify-center rounded-[20px] bg-[linear-gradient(135deg,#c6a96b_0%,#6b5a2e_100%)] text-xl font-black text-[#0b1020] transition group-hover:scale-105">
@@ -409,6 +438,49 @@ export default function HomePage() {
                         <p className="text-[13px] font-semibold text-[#94a3b8]">
                           루머 날짜: {formatRumorDate(player.rumor_date)}
                         </p>
+                      </div>
+
+                      <div className="mb-5 rounded-[18px] border border-[rgba(198,169,107,0.18)] bg-[rgba(198,169,107,0.08)] p-4">
+                        <div className="mb-2 flex items-center justify-between gap-3">
+                          <p className="text-[13px] font-black text-[#c6a96b]">
+                            Transfer Probability
+                          </p>
+
+                          <strong
+                            className="text-xl"
+                            style={{ color: probabilityColor }}
+                          >
+                            {probability}%
+                          </strong>
+                        </div>
+
+                        <div className="h-2.5 overflow-hidden rounded-full border border-[#1f2942] bg-[#0b1020]">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${probability}%` }}
+                            transition={{
+                              duration: 0.7,
+                              delay: 0.15 + index * 0.04,
+                            }}
+                            style={{
+                              height: '100%',
+                              borderRadius: 999,
+                              background: probabilityColor,
+                            }}
+                          />
+                        </div>
+
+                        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                          <p className="text-[12px] font-bold text-[#94a3b8]">
+                            Spurs Scout 추정치
+                          </p>
+
+                          {player.probability_confidence && (
+                            <span className="rounded-full border border-[#c6a96b]/25 bg-[#111827] px-3 py-1 text-[12px] font-bold text-[#d7bd77]">
+                              Confidence: {player.probability_confidence}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       <div className="mb-6 rounded-[18px] border border-[rgba(198,169,107,0.18)] bg-[rgba(198,169,107,0.08)] p-4 transition group-hover:border-[rgba(198,169,107,0.35)]">

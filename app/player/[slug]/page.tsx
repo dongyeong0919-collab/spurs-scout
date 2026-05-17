@@ -29,7 +29,6 @@ type PlayerDetail = {
   ready_now: string | null
   risk_summary: string | null
   role_summary: string | null
-  chemistry: string | null
   summary?: string | null
   strengths?: string | null
   risks?: string | null
@@ -133,7 +132,8 @@ export default async function PlayerDetailPage({
     '토트넘 전술 시스템에 적합한 잠재력을 가진 선수.'
 
   const strengths = formatList(player.pros ?? player.strengths)
-  const risks = player.risk_summary ?? formatList(player.cons ?? player.risks)
+  const weaknesses = formatList(player.cons)
+  const risks = player.risk_summary ?? formatList(player.risks)
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -204,7 +204,6 @@ export default async function PlayerDetailPage({
 
             <div className="rounded-2xl bg-[#c4a35a] px-6 py-4 text-center text-black">
               <p className="text-sm font-bold">전술 적합도</p>
-
               <p className="text-3xl font-black">{player.fit_score ?? '-'}</p>
             </div>
           </div>
@@ -246,6 +245,12 @@ export default async function PlayerDetailPage({
               </p>
             </InfoCard>
 
+            <InfoCard title="단점">
+              <p className="whitespace-pre-line leading-7 text-gray-300">
+                {weaknesses}
+              </p>
+            </InfoCard>
+
             <InfoCard title="리스크">
               <p className="whitespace-pre-line leading-7 text-gray-300">
                 {risks}
@@ -263,14 +268,6 @@ export default async function PlayerDetailPage({
                 {player.role_summary ?? '데이터 준비 중'}
               </p>
             </InfoCard>
-
-            <div className="md:col-span-2">
-              <InfoCard title="케미 좋은 선수">
-                <p className="leading-7 text-gray-300">
-                  {player.chemistry ?? '데이터 준비 중'}
-                </p>
-              </InfoCard>
-            </div>
           </div>
         </div>
       </div>
