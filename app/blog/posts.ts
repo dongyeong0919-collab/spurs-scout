@@ -1,7 +1,6 @@
 export type BlogPost = {
   slug: string
   title: string
-  description: string
   excerpt: string
   date: string
   category: string
@@ -10,39 +9,10 @@ export type BlogPost = {
 
 export const posts: BlogPost[] = [
   {
-    slug: 'tottenham-striker-targets-2026',
-    title: '토트넘 스트라이커 영입 후보 TOP5',
-    description:
-      '토트넘의 차기 스트라이커 후보들을 전술 적합도와 현실 가능성 기준으로 분석합니다.',
+    slug: 'best-left-back-for-spurs',
+    title: '토트넘에 가장 잘 맞는 왼쪽 풀백 유형',
     excerpt:
-      '토트넘의 차기 스트라이커 후보들을 전술 적합도와 현실 가능성 기준으로 분석합니다.',
-    date: '2026-05-13',
-    category: 'Transfer Analysis',
-    content: `
-토트넘은 현재 새로운 스트라이커 보강 가능성을 검토하고 있다.
-
-후보로는 다음 선수들이 거론된다:
-
-- Jonathan David
-- Viktor Gyokeres
-- Benjamin Sesko
-- Santiago Gimenez
-- Ivan Toney
-
-SPURS SCOUT 기준에서는
-전술 적합도와 현실 가능성을 함께 고려해야 한다.
-
-특히 압박 강도와 침투 움직임은
-포스테코글루 시스템에서 매우 중요하다.
-    `,
-  },
-  {
-    slug: 'tottenham-left-back-transfer-analysis',
-    title: '토트넘 왼쪽 풀백 영입은 왜 중요한가',
-    description:
-      '토트넘 전술에서 왼쪽 풀백 보강이 중요한 이유를 전술 역할과 스쿼드 밸런스 관점에서 분석합니다.',
-    excerpt:
-      '왼쪽 풀백은 단순 수비수가 아니라 전개, 압박, 하프스페이스 지원까지 담당하는 핵심 포지션입니다.',
+      '왼쪽 풀백은 단순 수비수가 아니라 전개, 압박, 하프스페이스 지원까지 담당하는 핵심 포지션이다.',
     date: '2026-05-13',
     category: 'Tactical Analysis',
     content: `
@@ -63,6 +33,43 @@ SPURS SCOUT 기준에서는
 
 SPURS SCOUT 기준에서 왼쪽 풀백 후보를 볼 때는
 단순 이름값보다 전술 적합도를 먼저 확인해야 한다.
-    `,
+`,
+  },
+
+  {
+    slug: 'what-is-scout-tier',
+    title: 'Scout Tier란 무엇인가?',
+    excerpt:
+      'Spurs Scout에서 사용하는 Scout Tier 시스템과 루머 신뢰도 기준을 설명합니다.',
+    category: 'Guide',
+    date: '2026-05-17',
+    content: `
+Scout Tier는 Spurs Scout가 사용하는 자체 이적 루머 분류 시스템입니다.
+
+단순히 “링크가 있다” 수준이 아니라:
+
+- 출처 신뢰도
+- 실제 협상 가능성
+- 전술적 필요성
+- 시장 상황
+
+등을 종합적으로 반영합니다.
+
+S Tier
+가장 강한 연결 단계입니다.
+신뢰도 높은 기자와 실제 협상 흐름이 동반되는 경우입니다.
+
+A Tier
+현실적인 가능성이 있는 핵심 타깃입니다.
+
+B Tier
+관심은 존재하지만 아직 초기 단계입니다.
+
+C Tier
+단순 링크 혹은 약한 루머 단계입니다.
+
+Spurs Scout는 단순 루머 집계가 아니라,
+토트넘 관점에서 현실성과 전술 적합도를 함께 분석하는 것을 목표로 합니다.
+`,
   },
 ]
