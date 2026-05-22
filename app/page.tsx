@@ -152,16 +152,11 @@ export default function HomePage() {
       result.sort((a, b) => a.name.localeCompare(b.name))
     }
 
-    if (sort === 'tier') {
-      const order: Record<string, number> = { S: 5, A: 4, B: 3, C: 2, D: 1 }
-
-      result.sort(
-        (a, b) =>
-          (order[b.scout_tier ?? ''] ?? 0) -
-          (order[a.scout_tier ?? ''] ?? 0)
-      )
-    }
-
+   if (sort === 'latest') {
+  result.sort((a, b) =>
+    (b.rumor_date ?? '').localeCompare(a.rumor_date ?? '')
+  )
+}
     return result
   }, [targets, search, status, position, sort, favoriteOnly, favorites])
 
@@ -363,16 +358,15 @@ export default function HomePage() {
                     ))}
                   </select>
 
-                  <select
-                    value={sort}
-                    onChange={(e) => setSort(e.target.value)}
-                    className="rounded-2xl border border-[#33415f] bg-[#11162a] px-3 py-3 text-sm text-white"
-                  >
-                    <option value="fit">적합도순</option>
-                    <option value="tier">티어순</option>
-                    <option value="name">이름순</option>
-                  </select>
-
+                 <select
+  value={sort}
+  onChange={(e) => setSort(e.target.value)}
+  className="rounded-2xl border border-[#33415f] bg-[#11162a] px-3 py-3 text-sm text-white"
+>
+  <option value="fit">적합도순</option>
+  <option value="latest">최신순</option>
+  <option value="name">이름순</option>
+</select>
                   <button
                     type="button"
                     onClick={() => setFavoriteOnly(!favoriteOnly)}

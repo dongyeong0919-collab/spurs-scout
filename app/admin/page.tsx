@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
+import BackButton from '@/components/BackButton'
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -151,9 +153,7 @@ export default function AdminPage() {
     setForm((prev) => ({
       ...prev,
       [name]: value,
-      ...(name === 'name' && !editingCaseId
-        ? { slug: makeSlug(value) }
-        : {}),
+      ...(name === 'name' && !editingCaseId ? { slug: makeSlug(value) } : {}),
     }))
   }
 
@@ -355,28 +355,31 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-8 text-white">
+    <main className="min-h-screen bg-[#050816] px-4 py-8 text-white">
       <div className="mx-auto max-w-6xl">
+        <BackButton />
+
         <h1 className="mb-2 text-3xl font-bold">SPURS SCOUT Admin</h1>
-        <p className="mb-8 text-sm text-slate-400">
+
+        <p className="mb-8 text-sm text-white/60">
           선수 이적 분석 데이터와 이적 가능성을 관리합니다.
         </p>
 
         {message && (
-          <div className="mb-6 rounded-xl border border-slate-700 bg-slate-900 p-4 text-sm">
+          <div className="mb-6 rounded-xl border border-[#26314f] bg-[#11162a] p-4 text-sm">
             {message}
           </div>
         )}
 
         <form
           onSubmit={handleSubmit}
-          className="mb-10 rounded-2xl border border-slate-800 bg-slate-900 p-6"
+          className="mb-10 rounded-2xl border border-[#26314f] bg-[#11162a] p-6"
         >
           <h2 className="mb-5 text-xl font-semibold">
             {editingCaseId ? '이적 케이스 수정' : '이적 케이스 등록'}
           </h2>
 
-          <div className="mb-6 rounded-2xl border border-slate-800 bg-slate-950 p-5">
+          <div className="mb-6 rounded-2xl border border-[#26314f] bg-[#0b1020] p-5">
             <h3 className="mb-4 text-lg font-bold">선수 정보</h3>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -391,12 +394,12 @@ export default function AdminPage() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <label className="space-y-2">
-              <span className="text-sm text-slate-300">상태</span>
+              <span className="text-sm text-white/70">상태</span>
               <select
                 name="status"
                 value={form.status}
                 onChange={handleChange}
-                className="w-full rounded-lg bg-slate-800 p-3"
+                className="w-full rounded-lg border border-[#26314f] bg-[#0b1020] p-3 text-white"
               >
                 <option value="linked">linked</option>
                 <option value="interest">interest</option>
@@ -437,7 +440,7 @@ export default function AdminPage() {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-xl bg-white px-5 py-3 font-semibold text-slate-950 disabled:opacity-50"
+              className="rounded-xl bg-white px-5 py-3 font-semibold text-[#050816] disabled:opacity-50"
             >
               {loading ? '저장 중...' : editingCaseId ? '수정하기' : '등록하기'}
             </button>
@@ -446,7 +449,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={handleCancelEdit}
-                className="rounded-xl border border-slate-700 px-5 py-3 font-semibold text-white"
+                className="rounded-xl border border-white/20 px-5 py-3 font-semibold text-white"
               >
                 취소
               </button>
@@ -461,12 +464,12 @@ export default function AdminPage() {
             {cases.map((item) => (
               <article
                 key={item.case_id}
-                className="rounded-2xl border border-slate-800 bg-slate-900 p-5"
+                className="rounded-2xl border border-[#26314f] bg-[#11162a] p-5"
               >
                 <div className="mb-4 flex flex-col justify-between gap-3 md:flex-row md:items-start">
                   <div>
                     <h3 className="text-xl font-bold">{item.name}</h3>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-white/60">
                       {item.position ?? '-'} · {item.current_team ?? '-'} · {item.age ?? '-'}세
                     </p>
                   </div>
@@ -495,7 +498,15 @@ export default function AdminPage() {
                   <Info label="출처" value={item.source} />
                   <Info label="기자 Tier" value={item.reliability_tier} />
                   <Info label="루머 날짜" value={item.rumor_date ? item.rumor_date.slice(0, 10) : null} />
-                  <Info label="이적 가능성" value={item.transfer_probability !== null && item.transfer_probability !== undefined ? `${item.transfer_probability}%` : null} />
+                  <Info
+                    label="이적 가능성"
+                    value={
+                      item.transfer_probability !== null &&
+                      item.transfer_probability !== undefined
+                        ? `${item.transfer_probability}%`
+                        : null
+                    }
+                  />
                   <Info label="확률 신뢰도" value={item.probability_confidence} />
                 </div>
               </article>
@@ -522,13 +533,13 @@ function Input({
 }) {
   return (
     <label className="space-y-2">
-      <span className="text-sm text-slate-300">{label}</span>
+      <span className="text-sm text-white/70">{label}</span>
       <input
         name={name}
         type={type}
         value={value}
         onChange={onChange}
-        className="w-full rounded-lg bg-slate-800 p-3"
+        className="w-full rounded-lg border border-[#26314f] bg-[#0b1020] p-3 text-white"
       />
     </label>
   )
@@ -547,13 +558,13 @@ function Textarea({
 }) {
   return (
     <label className="space-y-2">
-      <span className="text-sm text-slate-300">{label}</span>
+      <span className="text-sm text-white/70">{label}</span>
       <textarea
         name={name}
         value={value}
         onChange={onChange}
         rows={4}
-        className="w-full rounded-lg bg-slate-800 p-3"
+        className="w-full rounded-lg border border-[#26314f] bg-[#0b1020] p-3 text-white"
       />
     </label>
   )
@@ -561,8 +572,8 @@ function Textarea({
 
 function Info({ label, value }: { label: string; value?: string | null }) {
   return (
-    <div className="rounded-xl bg-slate-800 p-3">
-      <p className="text-xs text-slate-400">{label}</p>
+    <div className="rounded-xl border border-[#26314f] bg-[#0b1020] p-3">
+      <p className="text-xs text-white/50">{label}</p>
       <p className="mt-1 font-semibold">{value || '-'}</p>
     </div>
   )

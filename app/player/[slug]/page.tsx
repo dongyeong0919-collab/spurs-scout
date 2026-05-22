@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
+
+import BackButton from '@/components/BackButton'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -120,7 +121,7 @@ export default async function PlayerDetailPage({
 
   if (!player) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#0a0e1a] text-white">
+      <main className="flex min-h-screen items-center justify-center bg-[#050816] text-white">
         <h1 className="text-2xl font-bold">선수를 찾을 수 없습니다.</h1>
       </main>
     )
@@ -165,7 +166,7 @@ export default async function PlayerDetailPage({
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0e1a] px-4 py-10 text-white">
+    <main className="min-h-screen bg-[#050816] px-4 py-10 text-white">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -174,21 +175,16 @@ export default async function PlayerDetailPage({
       />
 
       <div className="mx-auto max-w-5xl">
-        <Link
-          href="/"
-          className="mb-8 inline-block text-sm text-[#c4a35a] hover:underline"
-        >
-          ← 이적 타깃으로 돌아가기
-        </Link>
+        <BackButton />
 
-        <div className="rounded-3xl border border-[rgba(196,163,90,0.2)] bg-[#11162a] p-6 shadow-2xl sm:p-8">
+        <div className="rounded-3xl border border-[#26314f] bg-[#11162a] p-6 shadow-2xl sm:p-8">
           <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-4xl font-black tracking-tight sm:text-5xl">
                 {player.name}
               </h1>
 
-              <p className="mt-3 text-lg text-gray-300">
+              <p className="mt-3 text-lg text-white/70">
                 {player.position} · {player.current_team}
               </p>
 
@@ -202,7 +198,7 @@ export default async function PlayerDetailPage({
               </div>
             </div>
 
-            <div className="rounded-2xl bg-[#c4a35a] px-6 py-4 text-center text-black">
+            <div className="rounded-2xl bg-white px-6 py-4 text-center text-[#050816]">
               <p className="text-sm font-bold">전술 적합도</p>
               <p className="text-3xl font-black">{player.fit_score ?? '-'}</p>
             </div>
@@ -210,7 +206,7 @@ export default async function PlayerDetailPage({
 
           <div className="grid gap-6 md:grid-cols-2">
             <InfoCard title="기본 정보">
-              <div className="space-y-2 text-gray-300">
+              <div className="space-y-2 text-white/75">
                 <p>국적: {player.nationality ?? '-'}</p>
                 <p>나이: {player.age ?? '-'}</p>
                 <p>Scout Tier: {player.scout_tier ?? '-'}</p>
@@ -220,7 +216,7 @@ export default async function PlayerDetailPage({
             </InfoCard>
 
             <InfoCard title="루머 출처">
-              <div className="space-y-2 text-gray-300">
+              <div className="space-y-2 text-white/75">
                 <p>출처: {player.source ?? '-'}</p>
                 <p>기자 Tier: {player.reliability_tier ?? '-'}</p>
                 <p>루머 날짜: {formatRumorDate(player.rumor_date)}</p>
@@ -230,41 +226,41 @@ export default async function PlayerDetailPage({
             </InfoCard>
 
             <InfoCard title="한줄 결론">
-              <p className="leading-7 text-gray-300">{conclusion}</p>
+              <p className="leading-7 text-white/75">{conclusion}</p>
             </InfoCard>
 
             <InfoCard title="링크 이유">
-              <p className="leading-7 text-gray-300">
+              <p className="leading-7 text-white/75">
                 {player.link_reason ?? '데이터 준비 중'}
               </p>
             </InfoCard>
 
             <InfoCard title="장점">
-              <p className="whitespace-pre-line leading-7 text-gray-300">
+              <p className="whitespace-pre-line leading-7 text-white/75">
                 {strengths}
               </p>
             </InfoCard>
 
             <InfoCard title="단점">
-              <p className="whitespace-pre-line leading-7 text-gray-300">
+              <p className="whitespace-pre-line leading-7 text-white/75">
                 {weaknesses}
               </p>
             </InfoCard>
 
             <InfoCard title="리스크">
-              <p className="whitespace-pre-line leading-7 text-gray-300">
+              <p className="whitespace-pre-line leading-7 text-white/75">
                 {risks}
               </p>
             </InfoCard>
 
             <InfoCard title="즉시전력감">
-              <p className="leading-7 text-gray-300">
+              <p className="leading-7 text-white/75">
                 {player.ready_now ?? '데이터 준비 중'}
               </p>
             </InfoCard>
 
             <InfoCard title="전술 역할">
-              <p className="leading-7 text-gray-300">
+              <p className="leading-7 text-white/75">
                 {player.role_summary ?? '데이터 준비 중'}
               </p>
             </InfoCard>
@@ -283,8 +279,8 @@ function InfoCard({
   children: React.ReactNode
 }) {
   return (
-    <div className="rounded-2xl bg-[#0f1324] p-6">
-      <h2 className="mb-3 text-xl font-bold text-[#c4a35a]">{title}</h2>
+    <div className="rounded-2xl border border-[#26314f] bg-[#0f1324] p-6">
+      <h2 className="mb-3 text-xl font-bold text-white">{title}</h2>
       {children}
     </div>
   )
@@ -292,7 +288,7 @@ function InfoCard({
 
 function Badge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-full border border-[#c4a35a]/25 bg-[#15203f] px-3 py-1 text-sm text-[#d1c89b]">
+    <span className="rounded-full border border-white/20 bg-[#15203f] px-3 py-1 text-sm text-white/80">
       {children}
     </span>
   )

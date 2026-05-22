@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+
+import BackButton from '@/components/BackButton'
 import CompareClient from './CompareClient'
 
 export const metadata: Metadata = {
@@ -32,5 +34,12 @@ export const metadata: Metadata = {
 }
 
 export default function ComparePage() {
-  return <CompareClient />
+  return (
+    <main className="min-h-screen bg-[#050816] px-4 py-10 text-white">
+      <div className="mx-auto max-w-6xl">
+        <BackButton />
+        <CompareClient />
+      </div>
+    </main>
+  )
 }
