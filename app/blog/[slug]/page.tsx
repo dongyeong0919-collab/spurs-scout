@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import BackButton from '@/components/BackButton'
@@ -21,22 +22,14 @@ export async function generateMetadata({
 
   return {
     title: `${post.title} | SPURS SCOUT`,
-
     description: post.excerpt,
-
     openGraph: {
       title: `${post.title} | SPURS SCOUT`,
-
       description: post.excerpt,
-
       url: `https://spurs-scout-bfz2.vercel.app/blog/${post.slug}`,
-
       siteName: 'SPURS SCOUT',
-
       locale: 'ko_KR',
-
       type: 'article',
-
       images: [
         {
           url: '/og-image.png',
@@ -46,14 +39,10 @@ export async function generateMetadata({
         },
       ],
     },
-
     twitter: {
       card: 'summary_large_image',
-
       title: post.title,
-
       description: post.excerpt,
-
       images: ['/og-image.png'],
     },
   }
@@ -74,27 +63,18 @@ export default async function BlogDetailPage({
 
   const jsonLd = {
     '@context': 'https://schema.org',
-
     '@type': 'Article',
-
     headline: post.title,
-
     description: post.excerpt,
-
     datePublished: post.date,
-
     author: {
       '@type': 'Organization',
-
       name: 'SPURS SCOUT',
     },
-
     publisher: {
       '@type': 'Organization',
-
       name: 'SPURS SCOUT',
     },
-
     mainEntityOfPage: `https://spurs-scout-bfz2.vercel.app/blog/${post.slug}`,
   }
 
@@ -110,17 +90,40 @@ export default async function BlogDetailPage({
       <div className="mx-auto max-w-4xl">
         <BackButton />
 
-        <article className="rounded-3xl border border-[#26314f] bg-[#11162a] p-6 sm:p-8">
-          <p className="mb-3 text-sm font-bold text-white/60">
-            {post.date} · {post.category}
-          </p>
+        <article className="overflow-hidden rounded-[32px] border border-[#26314f] bg-[#11162a] shadow-[0_0_40px_rgba(255,255,255,0.05)]">
+          <header className="border-b border-[#26314f] bg-[#0b1020] p-6 sm:p-8">
+            <div className="mb-5 flex flex-wrap items-center gap-3">
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-[#050816]">
+                {post.category}
+              </span>
 
-          <h1 className="mb-8 text-3xl font-black leading-tight text-white sm:text-5xl">
-            {post.title}
-          </h1>
+              <span className="text-sm font-bold text-white/50">
+                {post.date}
+              </span>
+            </div>
 
-          <div className="space-y-6 whitespace-pre-line text-[17px] leading-8 text-white/80">
-            {post.content}
+            <h1 className="text-3xl font-black leading-tight text-white sm:text-5xl">
+              {post.title}
+            </h1>
+
+            <p className="mt-5 max-w-3xl text-base leading-7 text-white/70">
+              {post.excerpt}
+            </p>
+          </header>
+
+          <div className="p-6 sm:p-8">
+            <div className="whitespace-pre-line text-[17px] leading-9 text-white/82">
+              {post.content}
+            </div>
+
+            <div className="mt-10 border-t border-[#26314f] pt-6">
+              <Link
+                href="/blog"
+                className="inline-flex rounded-full border border-white/20 px-4 py-2 text-sm font-black text-white no-underline transition hover:bg-white hover:text-[#050816]"
+              >
+                블로그 목록으로 →
+              </Link>
+            </div>
           </div>
         </article>
       </div>

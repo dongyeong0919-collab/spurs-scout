@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
+
+import PlayerCard from '@/components/PlayerCard'
 import { posts } from './blog/posts'
 
 const supabase = createClient(
@@ -31,47 +33,6 @@ type Target = {
 }
 
 const positionOptions = ['GK', 'LB', 'RB', 'CB', 'DM', 'CM', 'AMF', 'LW', 'RW', 'ST']
-
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((word) => word[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
-}
-
-function getTeamInitials(team: string | null) {
-  if (!team) return '-'
-
-  return team
-    .split(' ')
-    .map((word) => word[0])
-    .join('')
-    .slice(0, 3)
-    .toUpperCase()
-}
-
-function getStatusColor(status: string | null) {
-  if (status === 'talks') return '#f59e0b'
-  if (status === 'interest') return '#2563eb'
-  if (status === 'linked') return '#64748b'
-  if (status === 'verbal') return '#7c3aed'
-  if (status === 'official') return '#16a34a'
-  return '#475569'
-}
-
-function getScoreColor(score: number) {
-  if (score >= 85) return '#7ee081'
-  if (score >= 70) return '#f4d35e'
-  return '#ff7b7b'
-}
-
-function getProbabilityColor(score: number) {
-  if (score >= 70) return '#7ee081'
-  if (score >= 40) return '#f4d35e'
-  return '#ff7b7b'
-}
 
 export default function HomePage() {
   const latestPosts = posts.slice(0, 2)
@@ -140,23 +101,32 @@ export default function HomePage() {
       )
     }
 
-    if (status !== 'all') result = result.filter((player) => player.status === status)
-    if (position !== 'all') result = result.filter((player) => player.position === position)
-    if (favoriteOnly) result = result.filter((player) => favorites.includes(player.slug))
+    if (status !== 'all') {
+      result = result.filter((player) => player.status === status)
+    }
+
+    if (position !== 'all') {
+      result = result.filter((player) => player.position === position)
+    }
+
+    if (favoriteOnly) {
+      result = result.filter((player) => favorites.includes(player.slug))
+    }
 
     if (sort === 'fit') {
       result.sort((a, b) => (b.fit_score ?? 0) - (a.fit_score ?? 0))
+    }
+
+    if (sort === 'latest') {
+      result.sort((a, b) =>
+        (b.rumor_date ?? '').localeCompare(a.rumor_date ?? '')
+      )
     }
 
     if (sort === 'name') {
       result.sort((a, b) => a.name.localeCompare(b.name))
     }
 
-   if (sort === 'latest') {
-  result.sort((a, b) =>
-    (b.rumor_date ?? '').localeCompare(a.rumor_date ?? '')
-  )
-}
     return result
   }, [targets, search, status, position, sort, favoriteOnly, favorites])
 
@@ -170,13 +140,13 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-[#050816] text-white">
-      <div className="mx-auto max-w-[430px] bg-[#0b1020] pb-24 shadow-2xl lg:max-w-[1220px] lg:bg-transparent lg:px-6 lg:py-8">
-        <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0b1020]/95 px-5 py-4 backdrop-blur lg:rounded-3xl lg:border lg:border-[#26314f]">
+      <div className="mx-auto min-h-screen max-w-[430px] bg-[#0b1020] pb-24 shadow-2xl lg:max-w-[1220px] lg:bg-transparent lg:px-6 lg:py-8">
+        <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0b1020]/95 px-5 py-4 backdrop-blur lg:rounded-3xl lg:border lg:border-white/10">
           <div className="flex items-center justify-between">
             <button
               type="button"
               onClick={() => setActiveTab('home')}
-              className="text-2xl font-black text-white"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-2xl font-black text-white transition hover:border-white/30 hover:bg-white hover:text-[#050816]"
             >
               ‹
             </button>
@@ -192,18 +162,18 @@ export default function HomePage() {
             <Link
               href="/admin"
               prefetch={false}
-              className="rounded-full border border-white/40 px-3 py-1.5 text-xs font-bold text-white no-underline transition hover:bg-white hover:text-[#050816]"
+              className="rounded-full border border-white/20 px-3 py-1.5 text-xs font-bold text-white no-underline transition hover:border-white hover:bg-white hover:text-[#050816]"
             >
               Admin
             </Link>
           </div>
         </header>
 
-        <section className="px-5 pt-8 text-center">
+        <section className="px-5 pt-7 text-center lg:pt-8">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden rounded-[34px] border border-white/10 bg-[radial-gradient(circle_at_center,#1e2a4a_0%,#10182f_45%,#060914_100%)] px-5 py-12 shadow-[0_0_90px_rgba(255,255,255,0.10)]"
+            className="relative overflow-hidden rounded-[34px] border border-white/10 bg-[radial-gradient(circle_at_center,#1e2a4a_0%,#10182f_45%,#060914_100%)] px-5 py-11 shadow-[0_0_90px_rgba(255,255,255,0.10)] sm:py-12"
           >
             <div className="absolute inset-0 opacity-25">
               <div className="absolute left-[8%] top-[24%] h-[150px] w-[84%] rounded-t-full border-t border-white/25" />
@@ -226,7 +196,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <p className="mb-4 text-xs font-black tracking-[5px] text-white">
+              <p className="mb-4 text-xs font-black tracking-[5px] text-white/90">
                 TOTTENHAM TRANSFER HUB
               </p>
 
@@ -236,8 +206,8 @@ export default function HomePage() {
                 SCOUT
               </h1>
 
-              <p className="mx-auto mt-7 max-w-[360px] text-sm leading-7 text-white/90">
-                토트넘 이적 루머를 전술 적합도, Scout Tier, 이적 가능성으로 분석합니다.
+              <p className="mx-auto mt-7 max-w-[360px] text-sm leading-7 text-white/80">
+                토트넘 이적 루머를 전술 적합도, 출처 신뢰도, 이적 가능성으로 분석합니다.
               </p>
             </div>
           </motion.div>
@@ -246,10 +216,10 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => setActiveTab('transfer')}
-              className={`rounded-2xl px-3 py-3 text-sm font-black ${
+              className={`rounded-2xl px-3 py-3 text-sm font-black transition ${
                 activeTab === 'transfer'
                   ? 'bg-white text-[#050816]'
-                  : 'border border-[#33415f] bg-[#0b1020] text-white'
+                  : 'border border-white/10 bg-white/[0.03] text-white hover:border-white/30'
               }`}
             >
               이적시장
@@ -257,7 +227,7 @@ export default function HomePage() {
 
             <Link
               href="/compare"
-              className="rounded-2xl border border-[#33415f] bg-[#0b1020] px-3 py-3 text-sm font-black text-white no-underline transition hover:border-white"
+              className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3 text-sm font-black text-white no-underline transition hover:border-white/30 hover:bg-white/[0.06]"
             >
               비교
             </Link>
@@ -265,77 +235,59 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => setActiveTab('news')}
-              className={`rounded-2xl px-3 py-3 text-sm font-black ${
+              className={`rounded-2xl px-3 py-3 text-sm font-black transition ${
                 activeTab === 'news'
                   ? 'bg-white text-[#050816]'
-                  : 'border border-[#33415f] bg-[#0b1020] text-white'
+                  : 'border border-white/10 bg-white/[0.03] text-white hover:border-white/30'
               }`}
             >
               뉴스
             </button>
           </div>
 
-          <div className="mt-5 rounded-2xl border border-white/20 bg-[#1f2937] px-5 py-5 text-center">
-            <p className="text-xs font-bold text-white/70">AD / NOTICE</p>
+          <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-5 text-center">
+            <p className="text-xs font-bold tracking-[2px] text-white/45">
+              AD / NOTICE
+            </p>
             <p className="mt-1 text-xl font-black text-white">광고 영역</p>
           </div>
         </section>
 
-        {activeTab === 'home' && null}
-
         {activeTab === 'transfer' && (
           <>
             <section className="px-5 pt-6">
-              <div className="rounded-[32px] border border-[#dbe4ff] bg-[#f5f5f5] p-6 shadow-[0_10px_40px_rgba(37,99,235,0.08)]">
-                <div className="mb-6">
-                  <p className="text-xs font-black tracking-[3px] text-[#2563eb]">
-                    LIVE TRANSFER FEED
-                  </p>
+              <div className="rounded-[26px] border border-white/10 bg-[#0b1020] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.18)]">
+                <div className="mb-4 flex items-end justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-black tracking-[2px] text-white/45">
+                      FILTER
+                    </p>
+                    <h2 className="mt-1 text-xl font-black text-white">
+                      선수 검색
+                    </h2>
+                  </div>
 
-                  <h2 className="mt-2 text-4xl font-black tracking-tight text-[#0f172a]">
-                    최근 업데이트
-                  </h2>
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-bold text-white/70 transition hover:border-white/30 hover:text-white"
+                  >
+                    초기화
+                  </button>
                 </div>
 
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <UpdateItem
-                    player="Eberechi Eze"
-                    tag="Probability"
-                    text="이적 가능성이 68%로 업데이트되었습니다."
-                    time="방금 전"
-                  />
-
-                  <UpdateItem
-                    player="Marc Guehi"
-                    tag="Source"
-                    text="BBC Sport 기반 루머 출처가 반영되었습니다."
-                    time="12분 전"
-                  />
-
-                  <UpdateItem
-                    player="Pedro Neto"
-                    tag="Status"
-                    text="윙어 보강 후보로 talks 상태를 유지 중입니다."
-                    time="오늘"
-                  />
-                </div>
-              </div>
-            </section>
-
-            <section className="px-5 pt-6">
-              <div className="rounded-[26px] border border-[#26314f] bg-[#0b1020] p-4">
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="선수 이름 / 팀 / 출처 검색"
-                  className="mb-3 w-full rounded-2xl border border-[#33415f] bg-[#11162a] px-4 py-3 text-sm text-white outline-none focus:border-white"
+                  className="mb-3 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-white/40"
                 />
 
                 <div className="grid grid-cols-2 gap-3">
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
-                    className="rounded-2xl border border-[#33415f] bg-[#11162a] px-3 py-3 text-sm text-white"
+                    className="rounded-2xl border border-white/10 bg-[#11162a] px-3 py-3 text-sm text-white outline-none transition focus:border-white/40"
                   >
                     <option value="all">전체 상태</option>
                     <option value="linked">linked</option>
@@ -348,7 +300,7 @@ export default function HomePage() {
                   <select
                     value={position}
                     onChange={(e) => setPosition(e.target.value)}
-                    className="rounded-2xl border border-[#33415f] bg-[#11162a] px-3 py-3 text-sm text-white"
+                    className="rounded-2xl border border-white/10 bg-[#11162a] px-3 py-3 text-sm text-white outline-none transition focus:border-white/40"
                   >
                     <option value="all">전체 포지션</option>
                     {positionOptions.map((item) => (
@@ -358,153 +310,62 @@ export default function HomePage() {
                     ))}
                   </select>
 
-                 <select
-  value={sort}
-  onChange={(e) => setSort(e.target.value)}
-  className="rounded-2xl border border-[#33415f] bg-[#11162a] px-3 py-3 text-sm text-white"
->
-  <option value="fit">적합도순</option>
-  <option value="latest">최신순</option>
-  <option value="name">이름순</option>
-</select>
+                  <select
+                    value={sort}
+                    onChange={(e) => setSort(e.target.value)}
+                    className="rounded-2xl border border-white/10 bg-[#11162a] px-3 py-3 text-sm text-white outline-none transition focus:border-white/40"
+                  >
+                    <option value="fit">적합도순</option>
+                    <option value="latest">최신순</option>
+                    <option value="name">이름순</option>
+                  </select>
+
                   <button
                     type="button"
                     onClick={() => setFavoriteOnly(!favoriteOnly)}
-                    className={`rounded-2xl px-3 py-3 text-sm font-bold ${
+                    className={`rounded-2xl px-3 py-3 text-sm font-bold transition ${
                       favoriteOnly
                         ? 'bg-white text-[#050816]'
-                        : 'border border-[#33415f] bg-[#11162a] text-white'
+                        : 'border border-white/10 bg-[#11162a] text-white hover:border-white/30'
                     }`}
                   >
                     ⭐ 관심 선수
-                  </button>
-                </div>
-
-                <div className="mt-3 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={resetFilters}
-                    className="text-xs font-bold text-white"
-                  >
-                    초기화
                   </button>
                 </div>
               </div>
             </section>
 
             <section className="px-5 pt-7">
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-4 flex items-end justify-between gap-3">
                 <div>
-                  <p className="text-xs font-black tracking-[2px] text-white">
+                  <p className="text-xs font-black tracking-[2px] text-white/45">
                     TRANSFER MARKET
                   </p>
-                  <h2 className="text-2xl font-black">이적 후보</h2>
+                  <h2 className="mt-1 text-2xl font-black text-white">
+                    이적 후보
+                  </h2>
                 </div>
 
-                <p className="text-xs text-white/70">
+                <p className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-bold text-white/60">
                   {filteredTargets.length}/{targets.length}
                 </p>
               </div>
 
               {filteredTargets.length === 0 ? (
-                <p className="rounded-2xl border border-[#26314f] bg-[#0b1020] p-5 text-sm text-white/70">
-                  선택한 포지션의 이적 소식이 아직 없습니다.
+                <p className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-sm leading-6 text-white/70">
+                  선택한 조건에 맞는 이적 후보가 없습니다.
                 </p>
               ) : (
                 <div className="grid gap-4 lg:grid-cols-3">
-                  {filteredTargets.map((player, index) => {
-                    const score = player.fit_score ?? 0
-                    const probability = Math.min(
-                      Math.max(player.transfer_probability ?? 0, 0),
-                      100
-                    )
-                    const scoreColor = getScoreColor(score)
-                    const probabilityColor = getProbabilityColor(probability)
-                    const isFavorite = favorites.includes(player.slug)
-
-                    return (
-                      <motion.article
-                        key={player.case_id}
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                          duration: 0.45,
-                          delay: index * 0.05,
-                        }}
-                        className="relative rounded-[26px] border border-[#26314f] bg-[#0b1020] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-white hover:shadow-[0_0_30px_rgba(255,255,255,0.16)]"
-                      >
-                        <button
-                          type="button"
-                          onClick={() => toggleFavorite(player.slug)}
-                          className="absolute right-4 top-4 rounded-full border border-white/30 bg-[#11162a] px-3 py-2 text-lg"
-                        >
-                          {isFavorite ? '⭐' : '☆'}
-                        </button>
-
-                        <Link
-                          href={`/player/${player.slug}`}
-                          className="text-white no-underline"
-                        >
-                          <div className="flex gap-4 pr-12">
-                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-lg font-black text-[#050816]">
-                              {getInitials(player.name)}
-                            </div>
-
-                            <div>
-                              <h3 className="text-xl font-black">{player.name}</h3>
-
-                              <div className="mt-1 flex items-center gap-2 text-sm text-white/70">
-                                <span className="flex h-6 min-w-6 items-center justify-center rounded-full border border-white/30 bg-[#11162a] px-2 text-[10px] font-black text-white">
-                                  {getTeamInitials(player.current_team)}
-                                </span>
-
-                                <span>
-                                  {player.position ?? '-'} · {player.current_team ?? '-'}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="mt-4 flex flex-wrap gap-2">
-                            <span
-                              className="rounded-full px-2.5 py-1 text-xs font-black uppercase text-white"
-                              style={{ background: getStatusColor(player.status) }}
-                            >
-                              {player.status ?? 'unknown'}
-                            </span>
-                          </div>
-
-                          <ProgressBox
-                            label="이적 가능성"
-                            value={`${probability}%`}
-                            percent={probability}
-                            color={probabilityColor}
-                          />
-
-                          <ProgressBox
-                            label="전술 적합도"
-                            value={`${score}/100`}
-                            percent={score}
-                            color={scoreColor}
-                          />
-
-                          <p className="mt-4 line-clamp-2 text-sm leading-6 text-white/80">
-                            {player.conclusion ??
-                              '아직 한줄 결론이 입력되지 않았습니다.'}
-                          </p>
-
-                          <div className="mt-4 flex items-center justify-between border-t border-[#26314f] pt-4">
-                            <span className="text-xs text-white/60">
-                              {player.source ?? '출처 준비 중'}
-                            </span>
-                            <span className="rounded-full bg-white px-3 py-2 text-xs font-black text-[#050816] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_18px_rgba(255,255,255,0.35)]">
-                              자세히 보기 →
-                            </span>
-                          </div>
-                        </Link>
-                      </motion.article>
-                    )
-                  })}
+                  {filteredTargets.map((player, index) => (
+                    <PlayerCard
+                      key={player.case_id}
+                      player={player}
+                      index={index}
+                      isFavorite={favorites.includes(player.slug)}
+                      onToggleFavorite={toggleFavorite}
+                    />
+                  ))}
                 </div>
               )}
             </section>
@@ -512,10 +373,21 @@ export default function HomePage() {
         )}
 
         {activeTab === 'news' && (
-          <section className="px-5 pt-10">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-2xl font-black">최신 뉴스</h2>
-              <Link href="/blog" className="text-sm font-bold text-white">
+          <section className="px-5 pt-8">
+            <div className="mb-4 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-black tracking-[2px] text-white/45">
+                  BLOG
+                </p>
+                <h2 className="mt-1 text-2xl font-black text-white">
+                  최신 뉴스
+                </h2>
+              </div>
+
+              <Link
+                href="/blog"
+                className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-bold text-white/70 no-underline transition hover:border-white/30 hover:text-white"
+              >
                 전체 보기 →
               </Link>
             </div>
@@ -525,18 +397,22 @@ export default function HomePage() {
                 <Link
                   key={post.slug}
                   href={`/blog/${post.slug}`}
-                  className="rounded-[24px] border border-[#26314f] bg-[#0b1020] p-5 no-underline transition hover:border-white"
+                  className="rounded-[24px] border border-white/10 bg-[#0b1020] p-5 no-underline transition hover:-translate-y-1 hover:border-white/25 hover:bg-white/[0.035]"
                 >
-                  <p className="mb-2 text-xs font-bold text-white">
+                  <p className="mb-2 text-xs font-black tracking-[2px] text-white/45">
                     {post.category}
                   </p>
 
-                  <h3 className="mb-2 text-xl font-black text-white">
+                  <h3 className="mb-2 text-xl font-black leading-7 text-white">
                     {post.title}
                   </h3>
 
-                  <p className="line-clamp-2 text-sm leading-6 text-white/70">
+                  <p className="line-clamp-2 text-sm leading-6 text-white/65">
                     {post.excerpt}
+                  </p>
+
+                  <p className="mt-4 text-xs font-black text-white">
+                    읽기 →
                   </p>
                 </Link>
               ))}
@@ -545,17 +421,25 @@ export default function HomePage() {
         )}
 
         <footer className="px-5 pt-10">
-          <div className="rounded-[24px] border border-[#26314f] bg-[#0b1020] p-5">
+          <div className="rounded-[24px] border border-white/10 bg-[#0b1020] p-5">
             <div className="flex flex-wrap gap-3">
-              <Link href="/privacy" className="text-sm font-bold text-white">
+              <Link
+                href="/privacy"
+                className="text-sm font-bold text-white/75 no-underline transition hover:text-white"
+              >
                 개인정보처리방침
               </Link>
-              <Link href="/admin" prefetch={false} className="text-sm font-bold text-white">
+
+              <Link
+                href="/admin"
+                prefetch={false}
+                className="text-sm font-bold text-white/75 no-underline transition hover:text-white"
+              >
                 관리자
               </Link>
             </div>
 
-            <p className="mt-4 text-xs leading-6 text-[#777]">
+            <p className="mt-4 text-xs leading-6 text-white/35">
               본 사이트는 팬이 제작한 비공식 분석 플랫폼입니다. Tottenham Hotspur와
               공식 제휴된 서비스가 아닙니다.
             </p>
@@ -563,79 +447,5 @@ export default function HomePage() {
         </footer>
       </div>
     </main>
-  )
-}
-
-function UpdateItem({
-  player,
-  tag,
-  text,
-  time,
-}: {
-  player: string
-  tag: string
-  text: string
-  time: string
-}) {
-  const tagClass =
-    tag === 'Probability'
-      ? 'bg-[#2563eb] text-white'
-      : tag === 'Source'
-        ? 'bg-[#1d4ed8] text-white'
-        : 'bg-[#93c5fd] text-[#0f172a]'
-
-  return (
-    <div className="rounded-[26px] border border-[#dbe4ff] bg-white p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h3 className="text-2xl font-black text-[#0f172a]">
-          {player}
-        </h3>
-
-        <span className={`rounded-full px-4 py-2 text-xs font-black ${tagClass}`}>
-          {tag}
-        </span>
-      </div>
-
-      <p className="text-[15px] leading-7 text-[#334155]">
-        {text}
-      </p>
-
-      <p className="mt-5 text-sm font-black text-[#2563eb]">
-        {time}
-      </p>
-    </div>
-  )
-}
-
-function ProgressBox({
-  label,
-  value,
-  percent,
-  color,
-}: {
-  label: string
-  value: string
-  percent: number
-  color: string
-}) {
-  const safePercent = Math.min(Math.max(percent, 0), 100)
-
-  return (
-    <div className="mt-3 rounded-2xl border border-[#26314f] bg-[#11162a] p-4 transition-all duration-300 hover:border-white hover:shadow-[0_0_24px_rgba(255,255,255,0.12)]">
-      <div className="mb-2 flex justify-between text-sm">
-        <span className="text-white/70">{label}</span>
-        <strong style={{ color }}>{value}</strong>
-      </div>
-
-      <div className="h-2 overflow-hidden rounded-full bg-[#0b1020]">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${safePercent}%` }}
-          transition={{ duration: 0.9, ease: 'easeOut' }}
-          className="h-full rounded-full shadow-[0_0_14px_rgba(255,255,255,0.18)]"
-          style={{ background: color }}
-        />
-      </div>
-    </div>
   )
 }
