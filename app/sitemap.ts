@@ -1,9 +1,30 @@
 import type { MetadataRoute } from 'next'
+import { createClient } from '@supabase/supabase-js'
+
 import { posts } from './blog/posts'
 
 const baseUrl = 'https://spurs-scout-bfz2.vercel.app'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const { data: players } = await supabase
+    .from('transfer_targets')
+    .select('slug, updated_at')
+
+  const playerUrls =
+    players?.map((player) => ({
+      url: `${baseUrl}/player/${player.slug}`,
+      lastModified: player.updated_at
+        ? new Date(player.updated_at)
+        : new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.9,
+    })) ?? []
+
   const blogUrls = posts.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
     lastModified: new Date(post.date),
@@ -33,6 +54,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
 
+    ...playerUrls,
     ...blogUrls,
   ]
 }
