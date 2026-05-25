@@ -22,7 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ? new Date(player.updated_at)
         : new Date(),
       changeFrequency: 'daily' as const,
-      priority: 0.9,
+      priority: 0.85,
     })) ?? []
 
   const blogUrls = posts.map((post) => ({
@@ -39,21 +39,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'daily',
       priority: 1,
     },
-
+    {
+      url: `${baseUrl}/transfer`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.95,
+    },
     {
       url: `${baseUrl}/compare`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
-      priority: 0.7,
+      priority: 0.85,
     },
-
+    {
+      url: `${baseUrl}/news`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.85,
+    },
     {
       url: `${baseUrl}/blog`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
-      priority: 0.9,
+      priority: 0.8,
     },
-
     ...playerUrls,
     ...blogUrls,
   ]

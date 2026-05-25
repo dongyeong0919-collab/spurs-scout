@@ -27,7 +27,6 @@ type TransferCase = {
   link_reason: string | null
   fee: string | null
   fit_score: number | null
-  scout_tier: string | null
   pros: string[] | null
   cons: string[] | null
   conclusion: string | null
@@ -56,7 +55,6 @@ type FormState = {
   link_reason: string
   fee: string
   fit_score: string
-  scout_tier: string
   pros: string
   cons: string
   conclusion: string
@@ -85,7 +83,6 @@ const initialForm: FormState = {
   link_reason: '',
   fee: '',
   fit_score: '',
-  scout_tier: '',
   pros: '',
   cons: '',
   conclusion: '',
@@ -259,7 +256,6 @@ export default function AdminPage() {
       link_reason: form.link_reason || null,
       fee: form.fee || null,
       fit_score: form.fit_score ? Number(form.fit_score) : null,
-      scout_tier: form.scout_tier || null,
       pros: toArray(form.pros),
       cons: toArray(form.cons),
       conclusion: form.conclusion || null,
@@ -312,7 +308,6 @@ export default function AdminPage() {
       link_reason: item.link_reason ?? '',
       fee: item.fee ?? '',
       fit_score: item.fit_score?.toString() ?? '',
-      scout_tier: item.scout_tier ?? '',
       pros: fromArray(item.pros),
       cons: fromArray(item.cons),
       conclusion: item.conclusion ?? '',
@@ -355,31 +350,33 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#050816] px-4 py-8 text-white">
+    <main className="min-h-screen bg-[linear-gradient(135deg,#f7f8fa_0%,#eef1f5_50%,#f8f9fb_100%)] px-4 py-8 text-[#0b1020]">
       <div className="mx-auto max-w-6xl">
         <BackButton />
 
-        <h1 className="mb-2 text-3xl font-bold">SPURS SCOUT Admin</h1>
+        <h1 className="mb-2 text-3xl font-black text-[#0b1020]">
+          SPURS SCOUT Admin
+        </h1>
 
-        <p className="mb-8 text-sm text-white/60">
+        <p className="mb-8 text-sm text-[#0b1020]/60">
           선수 이적 분석 데이터와 이적 가능성을 관리합니다.
         </p>
 
         {message && (
-          <div className="mb-6 rounded-xl border border-[#26314f] bg-[#11162a] p-4 text-sm">
+          <div className="mb-6 rounded-xl border border-[#d8dde8] bg-white p-4 text-sm text-[#0b1020] shadow-[0_12px_36px_rgba(11,16,32,0.08)]">
             {message}
           </div>
         )}
 
         <form
           onSubmit={handleSubmit}
-          className="mb-10 rounded-2xl border border-[#26314f] bg-[#11162a] p-6"
+          className="mb-10 rounded-3xl border border-[#26314f] bg-[#0b1020] p-6 text-white shadow-[0_22px_70px_rgba(11,16,32,0.16)]"
         >
           <h2 className="mb-5 text-xl font-semibold">
             {editingCaseId ? '이적 케이스 수정' : '이적 케이스 등록'}
           </h2>
 
-          <div className="mb-6 rounded-2xl border border-[#26314f] bg-[#0b1020] p-5">
+          <div className="mb-6 rounded-2xl border border-[#26314f] bg-[#11162a] p-5">
             <h3 className="mb-4 text-lg font-bold">선수 정보</h3>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -399,7 +396,7 @@ export default function AdminPage() {
                 name="status"
                 value={form.status}
                 onChange={handleChange}
-                className="w-full rounded-lg border border-[#26314f] bg-[#0b1020] p-3 text-white"
+                className="w-full rounded-lg border border-[#26314f] bg-[#11162a] p-3 text-white outline-none transition focus:border-[#8FB8FF]"
               >
                 <option value="linked">linked</option>
                 <option value="interest">interest</option>
@@ -415,7 +412,6 @@ export default function AdminPage() {
             <Input label="루머 날짜" name="rumor_date" type="date" value={form.rumor_date} onChange={handleChange} />
             <Input label="예상 이적료" name="fee" value={form.fee} onChange={handleChange} />
             <Input label="전술 적합도 점수" name="fit_score" type="number" value={form.fit_score} onChange={handleChange} />
-            <Input label="Scout Tier" name="scout_tier" value={form.scout_tier} onChange={handleChange} />
             <Input label="이적 가능성 (%)" name="transfer_probability" type="number" value={form.transfer_probability} onChange={handleChange} />
             <Input label="확률 신뢰도" name="probability_confidence" value={form.probability_confidence} onChange={handleChange} />
           </div>
@@ -440,7 +436,7 @@ export default function AdminPage() {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-xl bg-white px-5 py-3 font-semibold text-[#050816] disabled:opacity-50"
+              className="rounded-xl bg-[#8FB8FF] px-5 py-3 font-semibold text-[#050816] transition hover:bg-white disabled:opacity-50"
             >
               {loading ? '저장 중...' : editingCaseId ? '수정하기' : '등록하기'}
             </button>
@@ -449,7 +445,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={handleCancelEdit}
-                className="rounded-xl border border-white/20 px-5 py-3 font-semibold text-white"
+                className="rounded-xl border border-white/20 px-5 py-3 font-semibold text-white transition hover:border-[#8FB8FF] hover:text-[#8FB8FF]"
               >
                 취소
               </button>
@@ -458,13 +454,15 @@ export default function AdminPage() {
         </form>
 
         <section>
-          <h2 className="mb-5 text-xl font-semibold">등록된 이적 케이스</h2>
+          <h2 className="mb-5 text-xl font-black text-[#0b1020]">
+            등록된 이적 케이스
+          </h2>
 
           <div className="grid gap-4">
             {cases.map((item) => (
               <article
                 key={item.case_id}
-                className="rounded-2xl border border-[#26314f] bg-[#11162a] p-5"
+                className="rounded-3xl border border-[#26314f] bg-[#0b1020] p-5 text-white shadow-[0_18px_55px_rgba(11,16,32,0.14)]"
               >
                 <div className="mb-4 flex flex-col justify-between gap-3 md:flex-row md:items-start">
                   <div>
@@ -477,13 +475,13 @@ export default function AdminPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEdit(item)}
-                      className="rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold"
+                      className="rounded-lg bg-[#8FB8FF] px-4 py-2 text-sm font-semibold text-[#050816]"
                     >
                       수정
                     </button>
                     <button
                       onClick={() => handleDelete(item.case_id)}
-                      className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold"
+                      className="rounded-lg bg-[#f87171] px-4 py-2 text-sm font-semibold text-white"
                     >
                       삭제
                     </button>
@@ -493,7 +491,6 @@ export default function AdminPage() {
                 <div className="grid gap-3 text-sm md:grid-cols-3">
                   <Info label="상태" value={item.status} />
                   <Info label="신뢰도" value={item.trust_level} />
-                  <Info label="Scout Tier" value={item.scout_tier} />
                   <Info label="전술 적합도" value={item.fit_score?.toString()} />
                   <Info label="출처" value={item.source} />
                   <Info label="기자 Tier" value={item.reliability_tier} />
@@ -539,7 +536,7 @@ function Input({
         type={type}
         value={value}
         onChange={onChange}
-        className="w-full rounded-lg border border-[#26314f] bg-[#0b1020] p-3 text-white"
+        className="w-full rounded-lg border border-[#26314f] bg-[#11162a] p-3 text-white outline-none transition focus:border-[#8FB8FF]"
       />
     </label>
   )
@@ -564,7 +561,7 @@ function Textarea({
         value={value}
         onChange={onChange}
         rows={4}
-        className="w-full rounded-lg border border-[#26314f] bg-[#0b1020] p-3 text-white"
+        className="w-full rounded-lg border border-[#26314f] bg-[#11162a] p-3 text-white outline-none transition focus:border-[#8FB8FF]"
       />
     </label>
   )
@@ -572,7 +569,7 @@ function Textarea({
 
 function Info({ label, value }: { label: string; value?: string | null }) {
   return (
-    <div className="rounded-xl border border-[#26314f] bg-[#0b1020] p-3">
+    <div className="rounded-xl border border-[#26314f] bg-[#11162a] p-3">
       <p className="text-xs text-white/50">{label}</p>
       <p className="mt-1 font-semibold">{value || '-'}</p>
     </div>

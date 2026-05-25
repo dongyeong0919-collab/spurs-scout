@@ -42,24 +42,24 @@ function getTeamInitials(team: string | null) {
 }
 
 function getStatusColor(status: string | null) {
-  if (status === 'talks') return '#f59e0b'
-  if (status === 'interest') return '#2563eb'
+  if (status === 'talks') return '#8FB8FF'
+  if (status === 'interest') return '#3b82f6'
   if (status === 'linked') return '#64748b'
   if (status === 'verbal') return '#7c3aed'
-  if (status === 'official') return '#16a34a'
+  if (status === 'official') return '#22c55e'
   return '#475569'
 }
 
 function getScoreColor(score: number) {
-  if (score >= 85) return '#7ee081'
-  if (score >= 70) return '#f4d35e'
-  return '#ff7b7b'
+  if (score >= 85) return '#4ade80'
+  if (score >= 70) return '#8FB8FF'
+  return '#f87171'
 }
 
 function getProbabilityColor(score: number) {
-  if (score >= 70) return '#7ee081'
-  if (score >= 40) return '#f4d35e'
-  return '#ff7b7b'
+  if (score >= 70) return '#4ade80'
+  if (score >= 40) return '#8FB8FF'
+  return '#f87171'
 }
 
 export default function PlayerCard({
@@ -69,6 +69,7 @@ export default function PlayerCard({
   onToggleFavorite,
 }: PlayerCardProps) {
   const score = Math.min(Math.max(player.fit_score ?? 0, 0), 100)
+
   const probability = Math.min(
     Math.max(player.transfer_probability ?? 0, 0),
     100
@@ -79,17 +80,15 @@ export default function PlayerCard({
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 22 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
         duration: 0.4,
         delay: index * 0.04,
         ease: 'easeOut',
       }}
-      className="group relative overflow-hidden rounded-[28px] border border-white/10 bg-[#0b1020] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] transition-all duration-300 hover:-translate-y-1 hover:border-white/25 hover:bg-white/[0.035] sm:p-5"
+      className="group relative overflow-hidden rounded-[30px] border border-[#26314f] bg-[#0b1020] p-5 text-white shadow-[0_18px_55px_rgba(11,16,32,0.14)] transition-all duration-300 hover:-translate-y-1 hover:border-[#8FB8FF] hover:shadow-[0_22px_70px_rgba(143,184,255,0.12)] sm:p-6"
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-70" />
-
       <button
         type="button"
         aria-label={isFavorite ? '관심 선수 해제' : '관심 선수 추가'}
@@ -98,24 +97,27 @@ export default function PlayerCard({
           event.stopPropagation()
           onToggleFavorite(player.slug)
         }}
-        className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#11162a]/95 text-lg text-white shadow-sm transition-all duration-300 hover:border-white/40 hover:bg-white hover:text-[#050816]"
+        className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-[#26314f] bg-[#11162a] text-lg text-white transition-all duration-300 hover:border-[#8FB8FF] hover:text-[#8FB8FF]"
       >
-        {isFavorite ? '⭐' : '☆'}
+        {isFavorite ? '★' : '☆'}
       </button>
 
-      <Link href={`/player/${player.slug}`} className="block text-white no-underline">
+      <Link
+        href={`/player/${player.slug}`}
+        className="block text-white no-underline"
+      >
         <div className="flex gap-4 pr-12">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-lg font-black tracking-tight text-[#050816] shadow-[0_10px_24px_rgba(255,255,255,0.12)]">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white text-xl font-black tracking-tight text-[#050816]">
             {getInitials(player.name)}
           </div>
 
-          <div className="min-w-0 pt-0.5">
-            <h3 className="truncate text-xl font-black tracking-tight text-white">
+          <div className="min-w-0 pt-1">
+            <h3 className="truncate text-2xl font-black tracking-tight text-white">
               {player.name}
             </h3>
 
             <div className="mt-2 flex min-w-0 items-center gap-2 text-sm text-white/65">
-              <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/[0.04] px-2 text-[10px] font-black text-white/90">
+              <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#11162a] px-2 text-[10px] font-black text-white">
                 {getTeamInitials(player.current_team)}
               </span>
 
@@ -126,16 +128,18 @@ export default function PlayerCard({
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-2">
+        <div className="mt-5 flex flex-wrap items-center gap-2">
           <span
-            className="rounded-full px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-white shadow-sm"
-            style={{ background: getStatusColor(player.status) }}
+            className="rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wide text-white"
+            style={{
+              background: getStatusColor(player.status),
+            }}
           >
             {player.status ?? 'unknown'}
           </span>
         </div>
 
-        <div className="mt-4 space-y-3">
+        <div className="mt-5 space-y-3">
           <ProgressBox
             label="이적 가능성"
             value={`${probability}%`}
@@ -151,7 +155,7 @@ export default function PlayerCard({
           />
         </div>
 
-        <p className="mt-4 line-clamp-2 min-h-[48px] text-sm leading-6 text-white/75">
+        <p className="mt-5 line-clamp-2 min-h-[52px] text-sm leading-7 text-white/72">
           {player.conclusion ?? '아직 한줄 결론이 입력되지 않았습니다.'}
         </p>
 
@@ -160,7 +164,7 @@ export default function PlayerCard({
             {player.source ?? '출처 준비 중'}
           </span>
 
-          <span className="shrink-0 rounded-full bg-white px-3.5 py-2 text-xs font-black text-[#050816] transition-all duration-300 group-hover:scale-[1.03]">
+          <span className="shrink-0 rounded-full border border-[#8FB8FF] px-4 py-2 text-xs font-black text-[#8FB8FF] transition-all duration-300 group-hover:bg-[#8FB8FF] group-hover:text-[#050816]">
             자세히 보기 →
           </span>
         </div>
@@ -183,10 +187,14 @@ function ProgressBox({
   const safePercent = Math.min(Math.max(percent, 0), 100)
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-3.5">
+    <div className="rounded-2xl border border-[#26314f] bg-[#11162a] p-3.5">
       <div className="mb-2 flex items-center justify-between gap-3 text-sm">
         <span className="font-medium text-white/60">{label}</span>
-        <strong className="shrink-0 font-black" style={{ color }}>
+
+        <strong
+          className="shrink-0 font-black"
+          style={{ color }}
+        >
           {value}
         </strong>
       </div>
@@ -195,7 +203,10 @@ function ProgressBox({
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${safePercent}%` }}
-          transition={{ duration: 0.85, ease: 'easeOut' }}
+          transition={{
+            duration: 0.85,
+            ease: 'easeOut',
+          }}
           className="h-full rounded-full"
           style={{ background: color }}
         />
